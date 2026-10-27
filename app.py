@@ -8,174 +8,135 @@ st.set_page_config(
     layout="wide"
 )
 
-# Estilo personalizado
+# Estilos visuales
 st.markdown("""
     <style>
-    .main-title {font-size:32px; font-weight:bold; color:#1E3A8A;}
-    .sub-title {font-size:18px; color:#4B5563;}
-    .highlight-box {background-color:#F3F4F6; padding:15px; border-radius:10px; border-left:5px solid #10B981;}
+    .main-title {font-size:30px; font-weight:bold; color:#1E3A8A;}
+    .sub-title {font-size:16px; color:#4B5563;}
+    .role-badge {background-color:#E0E7FF; color:#3730A3; padding:5px 12px; border-radius:15px; font-weight:bold;}
+    .card {background-color:#F9FAFB; padding:15px; border-radius:8px; border:1px solid #E5E7EB;}
     </style>
 """, unsafe_allow_html=True)
 
 # Encabezado
-st.markdown('<p class="main-title">🛡️ Integración de IA en Seguridad y Salud en el Trabajo (SST 5.0)</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">Proyecto de Práctica en Investigación | Dirección Nacional de Investigación - CUN</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">🛡️ Sistema de Gestión de SST 5.0 e Inteligencia Artificial</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">Semillero SST Inteligente | Dirección Nacional de Investigación - CUN</p>', unsafe_allow_html=True)
 st.write("---")
 
-# Menú lateral de navegación
-st.sidebar.image("https://cun.edu.co/assets/img/logo-cun.png", width=180)
-st.sidebar.title("Navegación del Proyecto")
-opcion = st.sidebar.radio(
-    "Selecciona una sección:",
+# Menú lateral: Selección de Rol y Navegación
+st.sidebar.title("🔐 Control de Acceso y Roles")
+
+rol_seleccionado = st.sidebar.selectbox(
+    "Selecciona tu perfil/rol:",
     [
-        "📌 Inicio y Presentación",
-        "🧠 Taxonomía Tecnológica IA",
-        "📐 Gobernanza y Normativa ISO",
-        "📚 Matriz de Literatura"
+        "👷 Usuario (Operario / Trabajador)",
+        "🔒 Administrador (Especialista SST / Dirección)",
+        "👁️ Invitado (Evaluador / Comité Semillero)"
     ]
 )
 
 st.sidebar.write("---")
-st.sidebar.info("""
-**Investigador:** Luis Eduardo Quintero H.  
-**Programa:** Ingeniería de Sistemas  
-**Tutor:** Luis Alberto León López  
-**Periodo:** Ago - Oct 2026  
-""")
+st.sidebar.markdown(f"**Perfil activo:** <br><span class='role-badge'>{rol_seleccionado}</span>", unsafe_allow_html=True)
+st.sidebar.write("---")
 
-# ==========================================
-# 1. INICIO Y PRESENTACIÓN
-# ==========================================
-if opcion == "📌 Inicio y Presentación":
-    st.header("🌱 Bienvenida al Semillero de SST Inteligente")
-    
-    col1, col2 = st.columns([2, 1])
-    
+# ========================================================
+# ROL 1: USUARIO (OPERARIO / TRABAJADOR)
+# ========================================================
+if "Usuario" in rol_seleccionado:
+    st.header("👷 Panel del Trabajador - Autocuidado y Prevención")
+    st.info("Bienvenido. Este espacio está diseñado para apoyar tu salud ocupacional, prevenir fatiga y garantizar la seguridad en tu puesto de trabajo.")
+
+    tab1, tab2 = st.tabs(["🦺 Verificación de EPP (Visión por IA)", "🧘 Reporte de Fatiga y Pausas Activas"])
+
+    with tab1:
+        st.subheader("Detectores de EPP y Zonas de Riesgo")
+        st.write("Simulación de detección mediante **Visión por Computador (YOLOv8)** en tu estación de trabajo:")
+        
+        casco = st.checkbox("Casco de seguridad colocado", value=True)
+        chaleco = st.checkbox("Chaleco reflectivo colocado", value=True)
+        guantes = st.checkbox("Guantes de protección", value=False)
+
+        if casco and chaleco and guantes:
+            st.success("✅ ¡Equipamiento completo! Estás listo para ingresar a la zona operativa.")
+        else:
+            st.warning("⚠️ Equipamiento incompleto. Se requiere uso de guantes antes de operar maquinaria.")
+
+    with tab2:
+        st.subheader("Monitoreo de Carga Biomecánica y Ergonomía")
+        nivel_fatiga = st.slider("¿Cómo te sientes físicamente al inicio/mitad de jornada?", 1, 10, 3)
+        
+        if nivel_fatiga >= 7:
+            st.error("🚨 Nivel de fatiga elevado. Se recomienda realizar una pausa activa de 10 minutos e hidratación.")
+        else:
+            st.success("😊 Nivel de fatiga bajo/moderado. Recuerda mantener posturas ergonómicas recomendadas por la ISO/TS 15066.")
+
+# ========================================================
+# ROL 2: ADMINISTRADOR (ESPECIALISTA SST / DIRECCIÓN)
+# ========================================================
+elif "Administrador" in rol_seleccionado:
+    st.header("🔒 Panel de Administración y Gobernanza Algorítmica")
+    st.warning("Acceso restringido para la gestión de políticas de seguridad, auditoría de cajas negras y configuración de cobots.")
+
+    tab1, tab2 = st.tabs(["⚙️ Control Biomecánico Robótico (ISO/TS 15066)", "📊 Auditoría e Integración de Modelos"])
+
+    with tab1:
+        st.subheader("Simulador de Umbrales en Cobots / Brazos Robóticos")
+        st.write("Ajuste de parámetros límite según la **ISO/TS 15066** (Límites de fuerza $140\\text{ N} - 290\\text{ N}$):")
+
+        limite_fuerza = st.number_input("Establecer límite máximo de fuerza (Newtons):", min_value=100, max_value=350, value=200)
+        fuerza_medida = st.slider("Fuerza simulada en sensor en tiempo real (N):", 50, 400, 180)
+
+        if fuerza_medida > limite_fuerza:
+            st.error(f"🚨 ALERTA DE SEGURIDAD: La fuerza de impacto ({fuerza_medida} N) supera el límite configurado ({limite_fuerza} N). Se activa la parada de emergencia determinista (Capa Intermedia / Human-in-the-Loop).")
+        else:
+            st.success(f"✅ Operación dentro del rango permitido ({fuerza_medida} N / {limite_fuerza} N).")
+
+    with tab2:
+        st.subheader("Configuración de Algoritmos de IA")
+        st.multiselect(
+            "Activar módulos de detección proactiva en planta:",
+            ["Detección de EPP (YOLOv8)", "Análisis de Frecuencia Cardíaca / Wearables", "NLP en Reportes Narrativos de Incidentes", "Mantenimiento Predictivo (LSTM)"],
+            default=["Detección de EPP (YOLOv8)", "NLP en Reportes Narrativos de Incidentes"]
+        )
+
+# ========================================================
+# ROL 3: INVITADO (EVALUADOR / COMITÉ SEMILLERO)
+# ========================================================
+elif "Invitado" in rol_seleccionado:
+    st.header("👁️ Modo Demostración - Proyecto de Investigación Semillero")
+    st.write("Vista pública compilada para docentes, evaluadores y participantes del **Semillero de Investigación SST Inteligente**.")
+
+    col1, col2 = st.columns(2)
     with col1:
-        st.write("""
-        Esta plataforma web sintetiza los avances y resultados alcanzados durante la práctica técnica en investigación enfocada en la 
-        **Integración de la Inteligencia Artificial en la Seguridad y Salud en el Trabajo (SST 5.0)**.
-        
-        El objetivo principal fue analizar la transición desde un paradigma **reactivo** (basado en inspecciones manuales y análisis post-accidente) 
-        hacia un modelo **cognitivo y predictivo**, apoyado en sensores IoT, visión artificial y sistemas *Human-in-the-Loop*.
-        """)
-        
-        with st.expander("🎯 Objetivos de la Práctica"):
-            st.markdown("""
-            * **General:** Analizar la integración de la IA en la SST mediante una revisión sistemática de literatura para identificar beneficios, oportunidades y barreras de gobernanza.
-            * **Específicos:**
-              1. Ejecutar un protocolo riguroso de búsqueda sistemática en bases de datos científicas.
-              2. Consolidar una Matriz de Control con artículos seleccionados.
-              3. Diseñar una propuesta de arquitectura de gobernanza ética y multinivel (*Human-in-the-Loop*).
-            """)
-
-    with col2:
         st.markdown("""
-        <div class="highlight-box">
-        <h4>📋 Ficha Técnica</h4>
-        <b>Estudiante:</b> Luis Eduardo Quintero<br>
-        <b>Institución:</b> CUN<br>
-        <b>Modalidad:</b> Práctica en Investigación<br>
-        <b>Calificación Final:</b> 5.0 / 5.0 ⭐
+        <div class="card">
+        <h4>📄 Detalles del Proyecto</h4>
+        <b>Título:</b> Integración de IA en la SST (SST 5.0)<br>
+        <b>Practicante:</b> Luis Eduardo Quintero Hernández<br>
+        <b>Programa:</b> Ingeniería de Sistemas (CUN)<br>
+        <b>Tutor:</b> Luis Alberto León López<br>
+        <b>Calificación:</b> 5.0 / 5.0 ⭐
         </div>
         """, unsafe_allow_html=True)
 
-# ==========================================
-# 2. TAXONOMÍA TECNOLÓGICA IA
-# ==========================================
-elif opcion == "🧠 Taxonomía Tecnológica IA":
-    st.header("🧠 Aplicaciones de la Inteligencia Artificial en SST")
-    st.write("Explora cómo las diferentes disciplinas de la IA transforman la prevención de riesgos laborales:")
-
-    categoria = st.selectbox(
-        "Selecciona un Dominio Tecnológico:",
-        [
-            "Visión por Computador (CV)",
-            "Sensórica e IoT (Wearables)",
-            "Analítica Predictiva & ML",
-            "IA Generativa & NLP"
-        ]
-    )
-
-    if categoria == "Visión por Computador (CV)":
-        st.subheader("👁️ Visión por Computador y Detección de Objetos")
-        st.write("**Modelos Clave:** YOLOv5, YOLOv8, Faster R-CNN")
-        st.markdown("""
-        * **Monitoreo de EPP:** Verificación automatizada en tiempo real del uso de cascos, chalecos y guantes mediante cámaras CCTV.
-        * **Invasión de Zonas de Peligro:** Alertas instantáneas cuando un trabajador ingresa al radio de operación de maquinaria pesada o brazos robóticos.
-        * **Estimación de Pose (3D):** Evaluación de ergonomía en tiempo real para detectar posturas forzadas.
-        """)
-        
-    elif categoria == "Sensórica e IoT (Wearables)":
-        st.subheader("⌚ Sensors Inteligentes y Fusión Sensorial")
-        st.write("**Dispositivos:** IMU, EEG, ECG, Parches fisiológicos")
-        st.markdown("""
-        * **Gestión de Fatiga:** Detección biomecánica y cardíaca de somnolencia o agotamiento térmico en jornadas exigentes.
-        * **Prevención de Trastornos Musculoesqueléticos:** Alertas táctiles/sonoras ante levantamiento incorrecto de cargas.
-        """)
-
-    elif categoria == "Analítica Predictiva & ML":
-        st.subheader("📊 Analítica Predictiva y Aprendizaje Automático")
-        st.write("**Algoritmos:** Random Forest, XGBoost, Redes LSTM")
-        st.markdown("""
-        * **Mantenimiento Predictivo:** Anticipación de fallas mecánicas en maquinaria para evitar colapsos y reducir tiempos de parada (downtime en 20-30%).
-        * **Análisis Causa Raíz (RCA):** Identificación de patrones en históricos de incidentes laborales.
-        """)
-
-    elif categoria == "IA Generativa & NLP":
-        st.subheader("💬 IA Generativa y Procesamiento de Lenguaje Natural")
-        st.write("**Modelos:** LLMs, Transformers, Modelos de Difusión")
-        st.markdown("""
-        * **Minería de Reportes:** Análisis automatizado de textos narrativos de incidentes (ej. bases de datos OSHA).
-        * **Simulación de Escenarios:** Generación sintética de eventos *near-miss* para entrenamiento virtual.
-        """)
-
-# ==========================================
-# 3. GOBERNANZA Y NORMATIVA ISO
-# ==========================================
-elif opcion == "📐 Gobernanza y Normativa ISO":
-    st.header("📐 Arquitectura de Gobernanza e Integración Normativa")
-    
-    st.subheader("🛡️ Estándares Internacionales de Seguridad en Robótica")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info("**ISO 10218-1/2:** Define los requisitos de seguridad e integridad física para instalaciones y robots industriales.")
     with col2:
-        st.info("**ISO/TS 15066:** Modula las operaciones colaborativas con cobots, estableciendo límites biomecánicos de fuerza y presión (140 N - 290 N).")
+        st.markdown("""
+        <div class="card">
+        <h4>🔬 Entregables Consolidados</h4>
+        1. Matriz de Control de Literatura Científica<br>
+        2. Borrador del Artículo de Investigación<br>
+        3. Propuesta de Arquitectura Human-in-the-Loop<br>
+        4. Aplicación Web Interactiva en Streamlit Cloud
+        </div>
+        """, unsafe_allow_html=True)
 
     st.write("---")
-    st.subheader("⚙️ Simulador de Verificación en Tiempo Real (Runtime Assurance)")
-    st.write("Simula la respuesta del sistema ante la detección de fuerza o cercanía en un entorno robótico colaborativo:")
-
-    fuerza = st.slider("Fuerza de impacto detectada (Newtons):", min_value=50, max_value=400, value=120)
-
-    if fuerza <= 140:
-        st.success(f"✅ Fuerza dentro del rango seguro ({fuerza} N). Operación normal continuada.")
-    elif 140 < fuerza <= 290:
-        st.warning(f"⚠️ Alerta Biomecánica ({fuerza} N). Reduciendo velocidad del cobot y emitiendo advertencia táctil.")
-    else:
-        st.error(f"🚨 LÍMITE DE SEGURIDAD SUPERADO ({fuerza} N). Activando parada de emergencia determinista (Capa Intermedia / CBF).")
-
-# ==========================================
-# 4. MATRIZ DE LITERATURA
-# ==========================================
-elif opcion == "📚 Matriz de Literatura":
-    st.header("📚 Matriz de Control y Análisis de Artículos")
-    st.write("Muestra de los artículos procesados en la revisión sistemática de literatura durante la práctica:")
-
-    # Datos de ejemplo basados en el semillero
+    st.subheader("📚 Muestra de la Matriz de Control de Literatura")
     datos_articulos = {
-        "Título del Artículo": [
-            "Computer Vision for PPE Detection in Construction",
-            "IoT Wearables for Occupational Ergonomics",
-            "Generative AI in Safety Incident Reporting",
-            "Human-Robot Collaboration Safety via ISO/TS 15066"
-        ],
-        "Tecnología IA": ["Visión por Computador (YOLOv8)", "IoT & IMU Sensors", "LLMs / NLP", "Control Determinista / CBF"],
-        "Dominio SST": ["Seguridad Física / EPP", "Ergonomía / TME", "Gestión de Incidentes", "Robótica Colaborativa"],
-        "Aporte Clave": ["Precisión del 95% en detección", "Reducción del fatiga en 12 semanas", "Minería de texto de reportes OSHA", "Cumplimiento de límites de fuerza"]
+        "Título": ["Computer Vision for PPE", "IoT Wearables Ergonomics", "GenAI Safety Reporting", "Cobot Safety ISO/TS 15066"],
+        "Tecnología": ["YOLOv8 / CNN", "Sensors IMU", "LLM / NLP", "Control Determinista"],
+        "Impacto": ["95% precisión", "Reducción de fatiga", "Minería de datos OSHA", "Seguridad robótica"]
     }
+    st.dataframe(pd.DataFrame(datos_articulos), use_container_width=True)
 
-    df = pd.DataFrame(datos_articulos)
-    st.dataframe(df, use_container_width=True)
-    st.caption("Matriz compilada como parte de los entregables del Semillero SST Inteligente.")
+st.sidebar.info("💡 Tip: Cambia el rol en el menú lateral para probar cada interfaz.")
