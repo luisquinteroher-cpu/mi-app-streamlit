@@ -85,7 +85,7 @@ def mostrar_confirmacion_modal(id_caso, usuario):
         st.rerun()
 
 # ========================================================
-# BARRA LATERAL (ESTILO VERIFTY FLOW)
+# BARRA LATERAL
 # ========================================================
 st.sidebar.markdown("""
     <div style="text-align: center; padding-bottom: 10px;">
@@ -136,7 +136,7 @@ st.sidebar.caption("🔒 **Protección de Datos:** Cumplimiento Ley 1581 de 2012
 
 st.sidebar.write("---")
 
-# LOGIN DE ADMINISTRADOR (CLAVE OCULTA CON MÁSCARA TYPE='PASSWORD')
+# LOGIN DE ADMINISTRADOR (CLAVE OCULTA)
 if "Central Administrador" in rol_seleccionado:
     if not st.session_state["admin_autenticado"]:
         st.sidebar.subheader("🔑 Iniciar Sesión SysAdmin")
@@ -168,7 +168,7 @@ else:
     cargo_saludo = "Operario / Usuario SST"
 
 # ========================================================
-# ESTILOS CSS
+# ESTILOS CSS CON ANIMACIONES
 # ========================================================
 if tema_seleccionado == "🌙 Modo Oscuro":
     st.markdown("""
@@ -181,12 +181,15 @@ if tema_seleccionado == "🌙 Modo Oscuro":
         .v-alert { background-color: #7F1D1D; border-left: 5px solid #EF4444; color: #FECDD3; padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; }
         .v-banner { background-color: #1E1B4B; border: 1px solid #4338CA; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
         
-        @media (max-width: 768px) {
-            .stApp { padding: 5px !important; }
-            .v-card { padding: 12px !important; margin-bottom: 10px !important; }
-            .v-metric-num { font-size: 22px !important; }
-            .main-title-mobile { font-size: 20px !important; }
+        .step-card {
+            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+            border: 1px solid #4F46E5;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+        .step-card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(79, 70, 229, 0.4); }
         </style>
     """, unsafe_allow_html=True)
 else:
@@ -202,18 +205,19 @@ else:
         .v-progress-bg { background-color: #EEF2FF; border-radius: 10px; height: 10px; overflow: hidden; margin-top: 4px; }
         .v-progress-fill { background: linear-gradient(90deg, #6366F1 0%, #3B82F6 100%); height: 100%; border-radius: 10px; }
         
-        @media (max-width: 768px) {
-            .stApp { padding: 5px !important; }
-            .v-card { padding: 12px !important; margin-bottom: 10px !important; }
-            .v-metric-num { font-size: 22px !important; }
-            .main-title-mobile { font-size: 20px !important; }
+        .step-card {
+            background: linear-gradient(135deg, #FFFFFF 0%, #EEF2FF 100%);
+            border: 1px solid #C7D2FE;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+        .step-card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(79, 70, 229, 0.2); }
         </style>
     """, unsafe_allow_html=True)
 
-# ========================================================
 # HEADER
-# ========================================================
 col_head_left, col_head_right = st.columns([3, 1])
 
 with col_head_left:
@@ -233,6 +237,50 @@ with col_head_right:
             <span style="background-color:#EEF2FF; color:#4338CA; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:bold;">{cargo_saludo} 🔒</span>
         </div>
     """, unsafe_allow_html=True)
+
+st.write("")
+
+# GUÍA DE USO INTERACTIVA PASO A PASO
+with st.expander("🚀 **¿Nuevo aquí? Toca aquí para ver la Guía de Uso Rápida (Paso a Paso)**", expanded=False):
+    st.markdown("### 🧭 Guía Interactiva para Navegar en la Plataforma")
+    
+    col_g1, col_g2, col_g3, col_g4 = st.columns(4)
+    
+    with col_g1:
+        st.markdown("""
+            <div class="step-card">
+                <h2 style="margin:0;">📝</h2>
+                <h4 style="color:#4F46E5; margin:5px 0;">1. Registra</h4>
+                <p style="font-size:12px; color:#64748B;">Completa el formulario con la ubicación, fotos y coordenadas GPS del hallazgo.</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col_g2:
+        st.markdown("""
+            <div class="step-card">
+                <h2 style="margin:0;">🔒</h2>
+                <h4 style="color:#4F46E5; margin:5px 0;">2. Autoriza</h4>
+                <p style="font-size:12px; color:#64748B;">Acepta la casilla de Habeas Data para proteger tu información conforme a la Ley.</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col_g3:
+        st.markdown("""
+            <div class="step-card">
+                <h2 style="margin:0;">🎉</h2>
+                <h4 style="color:#4F46E5; margin:5px 0;">3. Obtén Tu ID</h4>
+                <p style="font-size:12px; color:#64748B;">Recibirás un código único (ej: REP-003) en una ventana emergente.</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col_g4:
+        st.markdown("""
+            <div class="step-card">
+                <h2 style="margin:0;">🔍</h2>
+                <h4 style="color:#4F46E5; margin:5px 0;">4. Consulta</h4>
+                <p style="font-size:12px; color:#64748B;">Revisa el estado de la solución a tu caso en tiempo real desde la pestaña de consulta.</p>
+            </div>
+        """, unsafe_allow_html=True)
 
 st.write("")
 
@@ -373,7 +421,7 @@ if "Usuario / Operario" in rol_seleccionado:
             with st.popover("📜 Leer Política de Tratamiento de Datos (Ley 1581 de 2012)"):
                 st.markdown("""
                 ### **Aviso de Privacidad & Autorización de Tratamiento de Datos**
-                En cumplimiento de la **Ley 1581 de 2012** y el Decreto 1377 de 2013 de la República de Colombia, la información recolectada (nombre, ubicación GPS, fotografía e incidentes reportados) será tratada de manera strictly confidencial.
+                En cumplimiento de la **Ley 1581 de 2012** y el Decreto 1377 de 2013 de la República de Colombia, la información recolectada (nombre, ubicación GPS, fotografía e incidentes reportados) será tratada de manera estrictamente confidencial.
 
                 **1. Finalidad:** Los datos capturados serán utilizados única y exclusivamente para la prevención de riesgos laborales, auditorías del Sistema de Gestión de SST (ISO 45001) y atención a emergencias.
                 
@@ -697,3 +745,30 @@ else:
                 file_name="Base_Datos_SST_Verifty_CUN.csv",
                 mime="text/csv"
             )
+
+# ========================================================
+# MINI BOT ESQUINERO FLOTANTE
+# ========================================================
+with st.popover("💬 Asistente SST (Bot)", help="Consulta dudas frecuentes de SST"):
+    st.markdown("### 🤖 Mini Asistente SST 5.0")
+    st.write("¡Hola! Soy tu bot esquinero de soporte en Seguridad y Salud en el Trabajo.")
+    
+    pregunta_bot = st.selectbox(
+        "¿En qué te puedo orientar hoy?",
+        [
+            "--- Selecciona una pregunta rápida ---",
+            "¿Cómo reportar un incidente de trabajo?",
+            "¿Qué hacer en caso de un accidente de trabajo grave?",
+            "¿Dónde consulto el estado de mi caso?",
+            "¿Qué normas ISO aplican en la plataforma?"
+        ]
+    )
+    
+    if "incidente" in pregunta_bot.lower():
+        st.info("💡 **Respuesta:** Dirígete a la pestaña *'Registrar Nuevo Reporte'*, completa la ubicación, foto, coordenadas GPS y acepta la norma de Habeas Data para enviarlo a la Central.")
+    elif "accidente" in pregunta_bot.lower():
+        st.warning("🚨 **Respuesta:** En caso de accidente grave, presta primeros auxilios inmediatamente e informa a la brigada. Recuerda que debe ser reportado a Mintrabajo bajo la Res. 1401 de 2014 dentro de las 48 horas.")
+    elif "estado" in pregunta_bot.lower():
+        st.success("📋 **Respuesta:** Ingresa a *'Consultar Mis Reportes Registrados'* y selecciona tu nombre para verificar la respuesta del Administrador.")
+    elif "normas" in pregunta_bot.lower():
+        st.markdown("📜 **Respuesta:** Implementamos **ISO 45001** (Gestión SST), **ISO 10218** / **ISO/TS 15066** (Robótica), **ISO 9241** (Ergonomía) y **Ley 1581 de 2012** (Habeas Data).")
