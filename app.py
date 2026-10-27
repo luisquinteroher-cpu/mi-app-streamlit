@@ -275,4 +275,6 @@ else:
         
         with col_sw1:
             estado_switch = st.toggle("🟢 Prender / 🔴 Apagar recepción pública de reportes", value=st.session_state["recepcion_activa"])
-            if estado_switch != st
+            if estado_switch != st.session_state["recepcion_activa"]:
+    st.session_state["recepcion_activa"] = estado_switch
+    st.rerun()
