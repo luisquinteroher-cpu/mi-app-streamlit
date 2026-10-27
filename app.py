@@ -8,11 +8,35 @@ st.set_page_config(
     layout="wide"
 )
 
-# Inicializar estado para guardar los reportes enviados en la sesión
+# Inicializar estado para guardar la base de datos de reportes en la sesión
 if "reportes" not in st.session_state:
     st.session_state["reportes"] = [
-        {"ID": "REP-001", "Usuario": "Operario Planta 1", "Ubicación": "Zona de Embalaje", "Latitud": 4.6097, "Longitud": -74.0817, "Tipo Riesgo": "Ergonómico", "Severidad": "Media", "Descripción": "Posturas forzadas por altura inadecuada de la mesa.", "Estado": "En Revisión"},
-        {"ID": "REP-002", "Usuario": "Invitado Auditor", "Ubicación": "Área de Maquinaria", "Latitud": 4.6110, "Longitud": -74.0825, "Tipo Riesgo": "Mecánico", "Severidad": "Alta", "Descripción": "Falta guarda de protección en cinta transportadora.", "Estado": "Atendido"}
+        {
+            "ID": "REP-001", 
+            "Usuario": "Operario Planta 1", 
+            "Ubicación": "Zona de Embalaje", 
+            "Latitud": 4.6097, 
+            "Longitud": -74.0817, 
+            "Tipo Riesgo": "Ergonómico (Posturas/Cargas/Movimientos Repetitivos)", 
+            "Severidad": "Media", 
+            "Descripción": "Posturas forzadas por altura inadecuada de la mesa de empaque.", 
+            "Estado": "En Revisión",
+            "Respuesta_Admin": "Pendiente de visita técnica.",
+            "Responsable": "Sin Asignar"
+        },
+        {
+            "ID": "REP-002", 
+            "Usuario": "Desarrollador IT", 
+            "Ubicación": "Datacenter / Servidores", 
+            "Latitud": 4.6110, 
+            "Longitud": -74.0825, 
+            "Tipo Riesgo": "IT - Infraestructura & Datacenter (Racks/Ruido Servidores/Calor)", 
+            "Severidad": "Alta", 
+            "Descripción": "Exceso de ruido en servidor secundario y sobrecalentamiento en Rack 2.", 
+            "Estado": "Validado / En Gestión",
+            "Respuesta_Admin": "Se programó mantenimiento preventivo de ventilación.",
+            "Responsable": "Equipo de Infraestructura IT"
+        }
     ]
 
 # Estilos visuales
@@ -26,7 +50,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Encabezado
-st.markdown('<p class="main-title">🛡️ Sistema Integrado SST 5.0 + IA & Geolocalización</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">🛡️ Sistema Integrado SST 5.0 + IA & Gestión de Reportes</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">Proyecto de Práctica en Investigación | Dirección Nacional de Investigación - CUN</p>', unsafe_allow_html=True)
 st.write("---")
 
@@ -36,7 +60,7 @@ rol_seleccionado = st.sidebar.selectbox(
     "Selecciona tu perfil/rol:",
     [
         "👷 Usuario / Invitado (Reporte Ciudadano / Puesto)",
-        "🔒 Administrador (Panel de Control, Mapa & Analítica IA)"
+        "🔒 Administrador (Panel General, Gráficos & Gestión BBDD)"
     ]
 )
 
@@ -45,18 +69,35 @@ st.sidebar.markdown(f"**Perfil activo:** <br><span class='role-badge'>{rol_selec
 st.sidebar.write("---")
 
 # ========================================================
-# ROL 1: USUARIO / INVITADO (REPORTE CON GEOLOCALIZACIÓN)
+# ROL 1: USUARIO / INVITADO (REGISTRO DE REPORTES)
 # ========================================================
 if "Usuario / Invitado" in rol_seleccionado:
     st.header("📝 Módulo de Reporte con Ubicación en Tiempo Real")
-    st.info("Registra condiciones de riesgo en tiempo real capturando automáticamente las coordenadas GPS de la zona.")
+    st.info("Registra condiciones de riesgo en tiempo real seleccionando la categoría correspondiente al área de trabajo.")
 
     with st.form("form_reporte", clear_on_submit=True):
         col1, col2 = st.columns(2)
         with col1:
             nombre = st.text_input("Nombre / Identificador del Reportante:", value="Invitado / Anónimo")
-            ubicacion = st.text_input("Área / Sector de la planta:", placeholder="Ej. Bloque A - Rampa de Carga")
-            tipo_riesgo = st.selectbox("Categoría del Riesgo:", ["Físico (Ruido/Polvo)", "Ergonómico (Cargas/Postura)", "Mecánico (Atrapamiento/Maquinaria)", "Eléctrico", "Locativo"])
+            ubicacion = st.text_input("Área / Sector de la planta u oficina:", placeholder="Ej. Área IT / Datacenter o Almacén")
+            
+            tipo_riesgo = st.selectbox(
+                "Categoría del Riesgo (General & IT):",
+                [
+                    "--- 🏢 CATEGORÍAS GENERALES SST ---",
+                    "Ergonómico (Posturas/Cargas/Movimientos Repetitivos)",
+                    "Mecánico (Maquinaria/Herramientas/Atrapamiento)",
+                    "Físico & Locativo (Ruido/Iluminación/Caídas/Resbalones)",
+                    "Eléctrico (Tableros/Cableado)",
+                    "Químico & Biológico (Sustancias/Polvos/Agentes)",
+                    "Psicosocial (Estrés/Carga Mental)",
+                    "--- 💻 CATEGORÍAS ESPECÍFICAS DE IT ---",
+                    "IT - Visual & Postural (Pantallas/Túnel Carpiano/Sillas)",
+                    "IT - Infraestructura & Datacenter (Racks/Ruido Servidores/Calor)",
+                    "IT - Tecnoestrés & Ansiedad (Guardias 24/7/SLA)",
+                    "IT - Ciberseguridad / Factor Humano (Phishing/Fuga de Datos)"
+                ]
+            )
         
         with col2:
             severidad = st.select_slider("Nivel de Severidad Percibido:", options=["Baja", "Media", "Alta", "Crítica"])
@@ -66,10 +107,12 @@ if "Usuario / Invitado" in rol_seleccionado:
             lat_input = st.number_input("Latitud GPS:", value=4.6097, format="%.5f")
             lon_input = st.number_input("Longitud GPS:", value=-74.0817, format="%.5f")
 
-        submitted = st.form_submit_button("🚨 Registrar Reporte con Ubicación")
+        submitted = st.form_submit_button("🚨 Registrar Reporte")
 
         if submitted:
-            if descripcion and ubicacion:
+            if "---" in tipo_riesgo:
+                st.warning("⚠️ Por favor selecciona una categoría de riesgo válida (no los encabezados).")
+            elif descripcion and ubicacion:
                 nuevo_id = f"REP-00{len(st.session_state['reportes']) + 1}"
                 nuevo_reporte = {
                     "ID": nuevo_id,
@@ -80,65 +123,111 @@ if "Usuario / Invitado" in rol_seleccionado:
                     "Tipo Riesgo": tipo_riesgo,
                     "Severidad": severidad,
                     "Descripción": descripcion,
-                    "Estado": "Pendiente (Nuevo)"
+                    "Estado": "Pendiente (Nuevo)",
+                    "Respuesta_Admin": "Reporte registrado. En espera de revisión por el especialista SST.",
+                    "Responsable": "Por Asignar"
                 }
                 st.session_state["reportes"].append(nuevo_reporte)
-                st.success(f"✅ ¡Reporte **{nuevo_id}** registrado con coordenadas GPS ({lat_input}, {lon_input})!")
+                st.success(f"✅ ¡Reporte **{nuevo_id}** registrado exitosamente!")
             else:
                 st.warning("⚠️ Por favor completa la ubicación y la descripción del reporte.")
 
 # ========================================================
-# ROL 2: ADMINISTRADOR (PANEL GENERAL, MAPA & ANALÍTICA IA)
+# ROL 2: ADMINISTRADOR (DASHBOARD, GRÁFICOS & GESTIÓN BBDD)
 # ========================================================
 else:
-    st.header("🔒 Panel Administrador - Mapa en Tiempo Real y IA")
+    st.header("🔒 Panel Administrador - Dashboard, Analítica e Interacción BBDD")
     
-    tab_mapa, tab_panel, tab_ia = st.tabs(["🗺️ Mapa de Riesgos en Tiempo Real", "📊 Consolidado de Reportes", "🤖 Analítica IA (NLP)"])
+    df_rep = pd.DataFrame(st.session_state["reportes"])
 
-    # --- TAB 1: MAPA EN TIEMPO REAL ---
-    with tab_mapa:
-        st.subheader("📍 Georreferenciación de Puntos Críticos de SST")
-        st.write("Visualización espacial de los incidentes y alertas registradas en planta/obra:")
+    tab_dash, tab_gestion, tab_mapa, tab_export = st.tabs([
+        "📊 Dashboard & Gráficos", 
+        "✍️ Validar, Responder & Editar", 
+        "🗺️ Mapa en Tiempo Real", 
+        "💾 Almacenamiento & Exportación"
+    ])
 
-        df_rep = pd.DataFrame(st.session_state["reportes"])
-        df_mapa = df_rep.rename(columns={"Latitud": "lat", "Longitud": "lon"})
+    # --- TAB 1: DASHBOARD CON GRÁFICOS ---
+    with tab_dash:
+        st.subheader("📈 Analítica Visual de Riesgos y Gestión de SST")
         
-        st.map(df_mapa[["lat", "lon"]], zoom=14)
-        st.caption("Mapa interactivo de coordenadas detectadas para cada reporte de SST.")
+        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+        col_m1.metric("Total Reportes BBDD", len(df_rep))
+        col_m2.metric("Nuevos / Pendientes", len(df_rep[df_rep["Estado"].str.contains("Pendiente|Nuevo")]))
+        col_m3.metric("Casos Atendidos/Cerrados", len(df_rep[df_rep["Estado"].str.contains("Atendido|Cerrado")]))
+        col_m4.metric("Casos Alta/Crítica", len(df_rep[df_rep["Severidad"].isin(["Alta", "Crítica"])]))
 
-    # --- TAB 2: PANEL DE CONTROL ---
-    with tab_panel:
-        st.subheader("📋 Consolidado General")
-        st.dataframe(pd.DataFrame(st.session_state["reportes"]), use_container_width=True)
+        st.write("---")
+        col_g1, col_g2 = st.columns(2)
 
-        col_m1, col_m2, col_m3 = st.columns(3)
-        col_m1.metric("Total Reportes Georreferenciados", len(df_rep))
-        col_m2.metric("Reportes Pendientes", len(df_rep[df_rep["Estado"].str.contains("Pendiente|Nuevo")]))
-        col_m3.metric("Puntos de Alto Riesgo", len(df_rep[df_rep["Severidad"].isin(["Alta", "Crítica"])]))
+        with col_g1:
+            st.markdown("##### 📌 Distribución por Severidad")
+            severidad_counts = df_rep["Severidad"].value_counts()
+            st.bar_chart(severidad_counts)
 
-    # --- TAB 3: IA & DIAGNÓSTICO ---
-    with tab_ia:
-        st.subheader("🤖 Asistente IA para Gestión de Reportes")
+        with col_g2:
+            st.markdown("##### 🏢 Categorías de Riesgos Reportados")
+            riesgo_counts = df_rep["Tipo Riesgo"].value_counts()
+            st.bar_chart(riesgo_counts)
+
+    # --- TAB 2: EDITAR, RESPONDER Y VALIDAR REPORTES ---
+    with tab_gestion:
+        st.subheader("✍️ Centro de Validación y Respuesta de Incidentes")
+        st.write("Selecciona un reporte recibido para modificar su estado, asignar responsable y guardar respuesta oficial:")
+
         lista_ids = [r["ID"] for r in st.session_state["reportes"]]
-        reporte_sel_id = st.selectbox("Seleccionar ID de Reporte para análisis IA:", lista_ids)
+        id_sel = st.selectbox("Seleccionar ID del Reporte a gestionar:", lista_ids)
 
-        reporte_sel = next(r for r in st.session_state["reportes"] if r["ID"] == reporte_sel_id)
+        # Obtener el índice del reporte seleccionado
+        idx = next(i for i, r in enumerate(st.session_state["reportes"]) if r["ID"] == id_sel)
+        rep = st.session_state["reportes"][idx]
 
         st.markdown(f"""
         <div class="report-card">
-        <b>ID:</b> {reporte_sel['ID']} | <b>Ubicación:</b> {reporte_sel['Ubicación']} ({reporte_sel['Latitud']}, {reporte_sel['Longitud']})<br>
-        <b>Descripción:</b> {reporte_sel['Descripción']}<br>
-        <b>Severidad:</b> {reporte_sel['Severidad']}
+        <b>ID:</b> {rep['ID']} | <b>Reportante:</b> {rep['Usuario']} | <b>Ubicación:</b> {rep['Ubicación']}<br>
+        <b>Categoría:</b> {rep['Tipo Riesgo']} | <b>Severidad:</b> {rep['Severidad']}<br>
+        <b>Descripción:</b> {rep['Descripción']}
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button("✨ Analizar Riesgo con IA"):
-            st.write("---")
-            if "Ergonómico" in reporte_sel["Tipo Riesgo"] or "postura" in reporte_sel["Descripción"].lower():
-                st.info("📌 **Diagnóstico IA:** Riesgo de Trastornos Musculoesqueléticos (TME) por carga biomecánica[cite: 2].")
-                st.warning("⚠️ **Medida Preventiva:** Evaluar estación de trabajo mediante protocolo ISO/TS 15066 y sensores IMU[cite: 2, 10, 11].")
-            elif "Mecánico" in reporte_sel["Tipo Riesgo"] or "guarda" in reporte_sel["Descripción"].lower():
-                st.error("🚨 **Diagnóstico IA:** Riesgo mecánico o de colisión en zona crítica[cite: 2].")
-                st.markdown("🔒 **Medida Preventiva:** Activar parada de emergencia determinista e inspección técnica según ISO 10218[cite: 2, 11].")
-            else:
-                st.success("✅ **Diagnóstico IA:** Condición locativa estándar de baja prioridad.")
+        with st.form("form_gestion_admin"):
+            col_a1, col_a2 = st.columns(2)
+            with col_a1:
+                nuevo_estado = st.selectbox(
+                    "Estado de la Solicitud / Validar:",
+                    ["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"],
+                    index=["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"].index(rep["Estado"]) if rep["Estado"] in ["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"] else 0
+                )
+                responsable = st.text_input("Asignar Responsable de Caso:", value=rep.get("Responsable", "Especialista SST"))
+
+            with col_a2:
+                respuesta = st.text_area("Respuesta Oficial / Plan de Acción SST:", value=rep.get("Respuesta_Admin", ""))
+
+            btn_guardar = st.form_submit_button("💾 Guardar Cambios en BBDD")
+
+            if btn_guardar:
+                st.session_state["reportes"][idx]["Estado"] = nuevo_estado
+                st.session_state["reportes"][idx]["Responsable"] = responsable
+                st.session_state["reportes"][idx]["Respuesta_Admin"] = respuesta
+                st.success(f"✅ ¡El reporte **{id_sel}** ha sido actualizado correctamente en la Base de Datos!")
+                st.rerun()
+
+    # --- TAB 3: MAPA ---
+    with tab_mapa:
+        st.subheader("📍 Georreferenciación en Planta")
+        df_mapa = df_rep.rename(columns={"Latitud": "lat", "Longitud": "lon"})
+        st.map(df_mapa[["lat", "lon"]], zoom=14)
+
+    # --- TAB 4: ALMACENAMIENTO Y DESCARGA BBDD ---
+    with tab_export:
+        st.subheader("💾 Base de Datos Consolidada de Reportes")
+        st.dataframe(df_rep, use_container_width=True)
+
+        # Convertir dataframe a CSV para descarga en línea
+        csv_data = df_rep.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Descargar Base de Datos Completa (CSV / Excel)",
+            data=csv_data,
+            file_name="Base_Datos_Reportes_SST_CUN.csv",
+            mime="text/csv"
+        )
