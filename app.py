@@ -148,6 +148,17 @@ if "Central Administrador" in rol_seleccionado:
             st.session_state["admin_autenticado"] = False
             st.rerun()
 
+# DETERMINAR EL NOMBRE Y ROL DINÁMICO PARA EL SALUDO
+if "Central Administrador" in rol_seleccionado and st.session_state["admin_autenticado"]:
+    nombre_saludo = "SysAdmin"
+    cargo_saludo = "Administrador del Sistema / SST"
+elif "Central Administrador" in rol_seleccionado:
+    nombre_saludo = "Invitado Admin"
+    cargo_saludo = "Pendiente de Autenticación"
+else:
+    nombre_saludo = "Luis Quintero"
+    cargo_saludo = "Operario / Usuario SST"
+
 # ========================================================
 # ESTILOS CSS PERSONALIZADOS (ESTILO VERIFTY)
 # ========================================================
@@ -179,33 +190,31 @@ else:
     """, unsafe_allow_html=True)
 
 # ========================================================
-# HEADER ESTILO NAVBAR VERIFTY
+# HEADER ESTILO NAVBAR VERIFTY CON SALUDO DINÁMICO
 # ========================================================
 col_head_left, col_head_right = st.columns([3, 1])
 
 with col_head_left:
-    st.markdown("""
+    st.markdown(f"""
         <div style="display:flex; align-items:center; gap:15px;">
             <div>
-                <h2 style="margin:0; font-size:24px; font-weight:800; color:#4F46E5;">Hola, Ana</h2>
+                <h2 style="margin:0; font-size:26px; font-weight:800; color:#4F46E5;">Hola, {nombre_saludo}</h2>
                 <p style="margin:0; font-size:14px; color:#64748B;">Panel de Seguridad y Salud en el Trabajo | CUN & Verifty Flow</p>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
 with col_head_right:
-    st.markdown("""
+    st.markdown(f"""
         <div style="text-align:right;">
             <p style="margin:0; font-size:12px; font-weight:600; color:#64748B;">Martes, 18 de Agosto de 2026</p>
-            <span style="background-color:#EEF2FF; color:#4338CA; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">Coordinadora SST 🔔</span>
+            <span style="background-color:#EEF2FF; color:#4338CA; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">{cargo_saludo} 🔔</span>
         </div>
     """, unsafe_allow_html=True)
 
 st.write("")
 
-# ========================================================
 # BANNER DE CONFIGURACIÓN Y ALERTA NORMATIVA
-# ========================================================
 st.markdown("""
     <div class="v-banner">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -394,38 +403,38 @@ else:
     else:
         df_rep = pd.DataFrame(st.session_state["reportes"])
 
-        # GRID PRINCIPAL DE TARJETAS TIPO VERIFTY (MÉTRICAS + ANÁLISIS DE ZONAS)
+        # GRID PRINCIPAL DE TARJETAS TIPO VERIFTY
         col_m1, col_m2, col_m3, col_m4 = st.columns([1, 1, 1.4, 1.2])
 
         with col_m1:
-            st.markdown("""
+            st.markdown(f"""
                 <div class="v-card">
                     <div class="v-metric-title">Reportes del Mes</div>
-                    <div class="v-metric-num">{}</div>
+                    <div class="v-metric-num">{len(df_rep)}</div>
                     <div class="v-metric-sub">Actos y condiciones inseguras</div>
                 </div>
                 <div class="v-card">
                     <div class="v-metric-title">Tareas Pendientes</div>
-                    <div class="v-metric-num" style="color:#F59E0B;">{}</div>
+                    <div class="v-metric-num" style="color:#F59E0B;">{len(df_rep[df_rep["Estado"].str.contains("Pendiente|Nuevo")])}</div>
                     <div class="v-metric-sub">Esperando acción en la empresa</div>
                 </div>
                 <div class="v-card">
                     <div class="v-metric-title">Incidentes del Año</div>
-                    <div class="v-metric-num">{}</div>
+                    <div class="v-metric-num">{len(df_rep)}</div>
                     <div class="v-metric-sub">Sin lesión, registrados en 2026</div>
                 </div>
-            """.format(len(df_rep), len(df_rep[df_rep["Estado"].str.contains("Pendiente|Nuevo")]), len(df_rep)), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
         with col_m2:
-            st.markdown("""
+            st.markdown(f"""
                 <div class="v-card">
                     <div class="v-metric-title">Acciones Activas</div>
-                    <div class="v-metric-num">{}</div>
+                    <div class="v-metric-num">{len(df_rep[df_rep["Estado"].str.contains("Gestión|Revisión")])}</div>
                     <div class="v-metric-sub">En gestión operativa</div>
                 </div>
                 <div class="v-card">
                     <div class="v-metric-title">Instancias Completadas</div>
-                    <div class="v-metric-num" style="color:#10B981;">{}</div>
+                    <div class="v-metric-num" style="color:#10B981;">{len(df_rep[df_rep["Estado"].str.contains("Atendido|Cerrado")])}</div>
                     <div class="v-metric-sub">Flujos terminados este mes</div>
                 </div>
                 <div class="v-card">
@@ -433,7 +442,7 @@ else:
                     <div class="v-metric-num">172</div>
                     <div class="v-metric-sub">Incapacidad por accidentes</div>
                 </div>
-            """.format(len(df_rep[df_rep["Estado"].str.contains("Gestión|Revisión")]), len(df_rep[df_rep["Estado"].str.contains("Atendido|Cerrado")])), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
         with col_m3:
             st.markdown("""
@@ -477,13 +486,13 @@ else:
                 <div class="v-card">
                     <div class="v-metric-title">Índice de Frecuencia</div>
                     <div class="v-metric-num">0</div>
-                    <div class="v-metric-sub">Último mes calculado con HHT</div>
+                    <div class="v-metric-sub">Último mes calculated con HHT</div>
                 </div>
             """, unsafe_allow_html=True)
 
         st.write("---")
 
-        # PESTAÑAS DE CONTROL COMPLETO TIPO VERIFTY FLOW
+        # PESTAÑAS DE CONTROL COMPLETO
         tab_executive, tab_copilot, tab_management, tab_map, tab_controls, tab_database = st.tabs([
             "📈 1. Tendencia & Gráficos", 
             "🤖 2. Copilot Gemini IA & Causa Raíz", 
