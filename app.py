@@ -10,9 +10,9 @@ try:
 except ImportError:
     HAS_GEMINI_LIB = False
 
-# Configuración de la página
+# Configuración inicial de la página
 st.set_page_config(
-    page_title="Central SST 5.0 - Verifty Flow Style",
+    page_title="Central SST 5.0 - Verifty Flow + Habeas Data",
     page_icon="🛡️",
     layout="wide"
 )
@@ -39,7 +39,8 @@ if "reportes" not in st.session_state:
             "Estado": "En Revisión",
             "Respuesta_Admin": "Pendiente de visita técnica por especialista en ergonomía.",
             "Responsable": "Comité SST / Ergonomía",
-            "Zona_Cuerpo": "Tronco / Espalda"
+            "Foto": None,
+            "Autoriza_HabeasData": True
         },
         {
             "ID": "REP-002", 
@@ -53,21 +54,8 @@ if "reportes" not in st.session_state:
             "Estado": "Validado / En Gestión",
             "Respuesta_Admin": "Se programó mantenimiento preventivo de sistema de ventilación HVAC.",
             "Responsable": "Infraestructura & Soporte IT",
-            "Zona_Cuerpo": "Cabeza / Cara"
-        },
-        {
-            "ID": "REP-003", 
-            "Usuario": "María Rodríguez", 
-            "Ubicación": "Celda Robótica 3", 
-            "Latitud": 4.6105, 
-            "Longitud": -74.0820, 
-            "Tipo Riesgo": "Mecánico (Maquinaria/Herramientas/Atrapamiento)", 
-            "Severidad": "Crítica", 
-            "Descripción": "Sensor de proximidad de brazo robótico presenta latencia intermitente.", 
-            "Estado": "Atendido / Cerrado",
-            "Respuesta_Admin": "Parada preventiva ejecutada. Sensor reconfigurado bajo norma ISO 10218.",
-            "Responsable": "Mantenimiento Industrial & Mecatrónica",
-            "Zona_Cuerpo": "Brazo derecho"
+            "Foto": None,
+            "Autoriza_HabeasData": True
         }
     ]
 
@@ -78,23 +66,41 @@ if "admin_autenticado" not in st.session_state:
     st.session_state["admin_autenticado"] = False
 
 # ========================================================
+# FUNCION DIALOG / MODAL DE CONFIRMACIÓN DE CASO
+# ========================================================
+@st.dialog("🎉 ¡Reporte Creado Con Éxito!")
+def mostrar_confirmacion_modal(id_caso, usuario):
+    st.markdown(f"""
+        <div style="text-align: center; padding: 10px;">
+            <h3 style="color: #4F46E5; margin-bottom: 5px;">¡Gracias, {usuario}!</h3>
+            <p style="color: #64748B; font-size: 14px;">Su hallazgo ha sido registrado en el sistema bajo los estándares de SST y Habeas Data.</p>
+            <div style="background-color: #EEF2FF; border: 2px dashed #6366F1; padding: 15px; border-radius: 12px; margin: 15px 0;">
+                <span style="font-size: 13px; color: #4338CA; font-weight: bold;">NÚMERO DE CASO ASIGNADO:</span><br>
+                <span style="font-size: 28px; font-weight: 900; color: #1E1B4B;">{id_caso}</span>
+            </div>
+            <p style="font-size: 12px; color: #94A3B8;">Guarde este número para consultar el estado del caso en el sistema.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    if st.button("👍 Entendido / Cerrar", use_container_width=True):
+        st.rerun()
+
+# ========================================================
 # BARRA LATERAL (ESTILO VERIFTY FLOW)
 # ========================================================
 st.sidebar.markdown("""
-    <div style="text-align: center; padding-bottom: 15px;">
+    <div style="text-align: center; padding-bottom: 10px;">
         <h2 style="color: #4F46E5; margin:0;"><b>verifty</b></h2>
-        <span style="font-size: 11px; color: #6B7280;">SST FLOW 5.0</span>
+        <span style="font-size: 11px; color: #6B7280;">SST FLOW 5.0 + HABEAS DATA</span>
     </div>
 """, unsafe_allow_html=True)
 
-# Logos en la barra lateral si existen
 col_sb1, col_sb2 = st.sidebar.columns(2)
 with col_sb1:
     if os.path.exists("mi_logo.jpg"):
-        st.image("mi_logo.jpg", width=65)
+        st.image("mi_logo.jpg", width=60)
 with col_sb2:
     if os.path.exists("logo_cun.png"):
-        st.image("logo_cun.png", width=65)
+        st.image("logo_cun.png", width=60)
 
 st.sidebar.write("---")
 
@@ -126,9 +132,11 @@ else:
 if GEMINI_KEY:
     st.sidebar.info("🤖 **Gemini IA Copilot:** Conectado")
 
+st.sidebar.caption("🔒 **Protección de Datos:** Cumplimiento Ley 1581 de 2012 (Habeas Data)")
+
 st.sidebar.write("---")
 
-# Login Administrador
+# LOGIN DE ADMINISTRADOR (CLAVE OCULTA CON MÁSCARA TYPE='PASSWORD')
 if "Central Administrador" in rol_seleccionado:
     if not st.session_state["admin_autenticado"]:
         st.sidebar.subheader("🔑 Iniciar Sesión SysAdmin")
@@ -138,7 +146,7 @@ if "Central Administrador" in rol_seleccionado:
         if st.sidebar.button("Ingresar a la Central"):
             if user_input == "SysAdmin" and pass_input == "097":
                 st.session_state["admin_autenticado"] = True
-                st.sidebar.success("✅ Acceso concedido como SysAdmin")
+                st.sidebar.success("✅ Acceso concedido")
                 st.rerun()
             else:
                 st.sidebar.error("❌ Credenciales incorrectas")
@@ -148,7 +156,7 @@ if "Central Administrador" in rol_seleccionado:
             st.session_state["admin_autenticado"] = False
             st.rerun()
 
-# DETERMINAR EL NOMBRE Y ROL DINÁMICO PARA EL SALUDO
+# DETERMINAR EL NOMBRE Y ROL DINÁMICO
 if "Central Administrador" in rol_seleccionado and st.session_state["admin_autenticado"]:
     nombre_saludo = "SysAdmin"
     cargo_saludo = "Administrador del Sistema / SST"
@@ -160,7 +168,7 @@ else:
     cargo_saludo = "Operario / Usuario SST"
 
 # ========================================================
-# ESTILOS CSS PERSONALIZADOS (ESTILO VERIFTY)
+# ESTILOS CSS
 # ========================================================
 if tema_seleccionado == "🌙 Modo Oscuro":
     st.markdown("""
@@ -172,6 +180,13 @@ if tema_seleccionado == "🌙 Modo Oscuro":
         .v-metric-sub { font-size: 12px; color: #94A3B8; }
         .v-alert { background-color: #7F1D1D; border-left: 5px solid #EF4444; color: #FECDD3; padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; }
         .v-banner { background-color: #1E1B4B; border: 1px solid #4338CA; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        
+        @media (max-width: 768px) {
+            .stApp { padding: 5px !important; }
+            .v-card { padding: 12px !important; margin-bottom: 10px !important; }
+            .v-metric-num { font-size: 22px !important; }
+            .main-title-mobile { font-size: 20px !important; }
+        }
         </style>
     """, unsafe_allow_html=True)
 else:
@@ -186,11 +201,18 @@ else:
         .v-banner { background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; margin-bottom: 20px; }
         .v-progress-bg { background-color: #EEF2FF; border-radius: 10px; height: 10px; overflow: hidden; margin-top: 4px; }
         .v-progress-fill { background: linear-gradient(90deg, #6366F1 0%, #3B82F6 100%); height: 100%; border-radius: 10px; }
+        
+        @media (max-width: 768px) {
+            .stApp { padding: 5px !important; }
+            .v-card { padding: 12px !important; margin-bottom: 10px !important; }
+            .v-metric-num { font-size: 22px !important; }
+            .main-title-mobile { font-size: 20px !important; }
+        }
         </style>
     """, unsafe_allow_html=True)
 
 # ========================================================
-# HEADER ESTILO NAVBAR VERIFTY CON SALUDO DINÁMICO
+# HEADER
 # ========================================================
 col_head_left, col_head_right = st.columns([3, 1])
 
@@ -198,8 +220,8 @@ with col_head_left:
     st.markdown(f"""
         <div style="display:flex; align-items:center; gap:15px;">
             <div>
-                <h2 style="margin:0; font-size:26px; font-weight:800; color:#4F46E5;">Hola, {nombre_saludo}</h2>
-                <p style="margin:0; font-size:14px; color:#64748B;">Panel de Seguridad y Salud en el Trabajo | CUN & Verifty Flow</p>
+                <h2 class="main-title-mobile" style="margin:0; font-size:26px; font-weight:800; color:#4F46E5;">Hola, {nombre_saludo}</h2>
+                <p style="margin:0; font-size:13px; color:#64748B;">Panel de Seguridad y Salud en el Trabajo | CUN & Verifty Flow</p>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -207,8 +229,8 @@ with col_head_left:
 with col_head_right:
     st.markdown(f"""
         <div style="text-align:right;">
-            <p style="margin:0; font-size:12px; font-weight:600; color:#64748B;">Martes, 18 de Agosto de 2026</p>
-            <span style="background-color:#EEF2FF; color:#4338CA; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">{cargo_saludo} 🔔</span>
+            <p style="margin:0; font-size:11px; font-weight:600; color:#64748B;">Martes, 18 de Agosto de 2026</p>
+            <span style="background-color:#EEF2FF; color:#4338CA; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:bold;">{cargo_saludo} 🔒</span>
         </div>
     """, unsafe_allow_html=True)
 
@@ -217,13 +239,13 @@ st.write("")
 # BANNER DE CONFIGURACIÓN Y ALERTA NORMATIVA
 st.markdown("""
     <div class="v-banner">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <div>
-                <span style="font-weight:bold; color:#4F46E5; font-size:14px;">⚙️ Configura tu empresa: 2/7 pasos completados</span><br>
-                <span style="font-size:12px; color:#64748B;">Haz clic en el módulo para continuar la implementación de ISO 45001</span>
+                <span style="font-weight:bold; color:#4F46E5; font-size:13px;">⚙️ Configura tu empresa: 2/7 pasos completados</span><br>
+                <span style="font-size:11px; color:#64748B;">Haz clic en el módulo para continuar la implementación de ISO 45001 & Protección de Datos</span>
             </div>
             <div>
-                <span style="background-color:#4F46E5; color:white; padding:6px 16px; border-radius:20px; font-size:12px; font-weight:bold;">28% listo</span>
+                <span style="background-color:#4F46E5; color:white; padding:5px 14px; border-radius:20px; font-size:11px; font-weight:bold;">28% listo</span>
             </div>
         </div>
     </div>
@@ -288,7 +310,11 @@ def generar_analisis_avanzado_sst(rep):
 if "Usuario / Operario" in rol_seleccionado:
     st.header("👷 Módulo de Trabajo para Usuarios & Operarios")
     
-    tab_nuevo_rep, tab_mis_reportes = st.tabs(["📝 Registrar Nuevo Reporte (ID Único)", "📋 Consultar Mis Reportes Registrados"])
+    tab_nuevo_rep, tab_mis_reportes, tab_galeria_usr = st.tabs([
+        "📝 Registrar Nuevo Reporte (ID Único)", 
+        "📋 Consultar Mis Reportes Registrados",
+        "📷 Galería de Fotos Guardadas"
+    ])
 
     with tab_nuevo_rep:
         if not st.session_state["recepcion_activa"]:
@@ -328,7 +354,7 @@ if "Usuario / Operario" in rol_seleccionado:
                 st.subheader("📷 Registro Fotográfico")
                 foto_capturada = st.camera_input("Capturar foto del hallazgo:")
                 if foto_capturada:
-                    st.success("✅ Evidencia fotográfica cargada.")
+                    st.success("✅ Evidencia fotográfica cargada correctamente.")
 
                 st.subheader("📍 Coordenadas GPS")
                 loc = get_geolocation()
@@ -341,8 +367,30 @@ if "Usuario / Operario" in rol_seleccionado:
                     lon_real = st.number_input("Longitud GPS:", value=-74.0817, format="%.5f")
 
             st.write("---")
-            if st.button("🚨 Guardar Reporte con ID Único"):
-                if "---" in tipo_riesgo:
+
+            st.subheader("🔒 Protección de Datos Personales (Habeas Data)")
+            
+            with st.popover("📜 Leer Política de Tratamiento de Datos (Ley 1581 de 2012)"):
+                st.markdown("""
+                ### **Aviso de Privacidad & Autorización de Tratamiento de Datos**
+                En cumplimiento de la **Ley 1581 de 2012** y el Decreto 1377 de 2013 de la República de Colombia, la información recolectada (nombre, ubicación GPS, fotografía e incidentes reportados) será tratada de manera strictly confidencial.
+
+                **1. Finalidad:** Los datos capturados serán utilizados única y exclusivamente para la prevención de riesgos laborales, auditorías del Sistema de Gestión de SST (ISO 45001) y atención a emergencias.
+                
+                **2. Derechos del Titular (ARCO):** Como titular de los datos, usted tiene derecho a conocer, actualizar, rectificar y solicitar la supresión de sus datos personales.
+                """)
+
+            autoriza_habeas_data = st.checkbox(
+                "Acepto y autorizo el tratamiento de mis datos personales, ubicación GPS y evidencia fotográfica bajo la Ley de Habeas Data (Ley 1581 de 2012) para fines exclusivos de Seguridad y Salud en el Trabajo.",
+                value=False
+            )
+
+            st.write("---")
+
+            if st.button("🚨 Guardar Reporte con ID Único", use_container_width=True):
+                if not autoriza_habeas_data:
+                    st.error("⚠️ Debes aceptar la casilla de **Tratamiento de Datos Personales (Habeas Data)** para poder registrar el reporte.")
+                elif "---" in tipo_riesgo:
                     st.warning("⚠️ Por favor selecciona una categoría válida de riesgo.")
                 elif descripcion and ubicacion and nombre:
                     nuevo_reporte = {
@@ -357,12 +405,13 @@ if "Usuario / Operario" in rol_seleccionado:
                         "Estado": "Pendiente (Nuevo)",
                         "Respuesta_Admin": "Reporte recibido. En cola de revisión por la Central SST.",
                         "Responsable": "Por Asignar",
-                        "Zona_Cuerpo": "Tronco / Espalda"
+                        "Foto": foto_capturada,
+                        "Autoriza_HabeasData": autoriza_habeas_data
                     }
                     st.session_state["reportes"].append(nuevo_reporte)
                     st.session_state["contador_id"] += 1
-                    st.success(f"✅ ¡Reporte **{id_unico_generado}** guardado con éxito para **{nombre}**!")
-                    st.rerun()
+                    
+                    mostrar_confirmacion_modal(id_unico_generado, nombre)
                 else:
                     st.warning("⚠️ Por favor completa tu nombre, ubicación y descripción.")
 
@@ -379,31 +428,41 @@ if "Usuario / Operario" in rol_seleccionado:
             st.write(f"**Total de reportes asociados a `{usuario_buscar}`:** {len(mis_reps)}")
 
             for mr in mis_reps:
+                habeas_status = "✅ Autorizado" if mr.get("Autoriza_HabeasData", False) else "⚠️ Sin registro"
                 st.markdown(f"""
                 <div class="v-card">
-                <b>🆔 Número Único:</b> {mr['ID']} | <b>Ubicación:</b> {mr['Ubicación']}<br>
+                <b>🆔 Número Único de Caso:</b> <code style="font-size:16px;">{mr['ID']}</code> | <b>Ubicación:</b> {mr['Ubicación']}<br>
                 <b>Categoría:</b> {mr['Tipo Riesgo']} | <b>Severidad:</b> {mr['Severidad']}<br>
                 <b>Descripción:</b> {mr['Descripción']}<br>
                 <b>📌 Estado Actual:</b> <code>{mr['Estado']}</code> | <b>Responsable:</b> {mr['Responsable']}<br>
-                <b>💬 Respuesta Oficial:</b> {mr['Respuesta_Admin']}
+                <b>💬 Respuesta Oficial:</b> {mr['Respuesta_Admin']}<br>
+                <small style="color:#64748B;"><b>🔒 Habeas Data:</b> {habeas_status}</small>
                 </div>
                 """, unsafe_allow_html=True)
 
+    with tab_galeria_usr:
+        st.subheader("📷 Galería de Evidencias Fotográficas Guardadas")
+        reportes_con_foto = [r for r in st.session_state["reportes"] if r.get("Foto") is not None]
+        
+        if not reportes_con_foto:
+            st.info("ℹ️ No hay fotos o evidencias adjuntas en los reportes registrados hasta el momento.")
+        else:
+            cols_galeria = st.columns(3)
+            for idx, r_foto in enumerate(reportes_con_foto):
+                with cols_galeria[idx % 3]:
+                    st.image(r_foto["Foto"], caption=f"Caso: {r_foto['ID']} - {r_foto['Ubicación']}", use_container_width=True)
+                    st.caption(f"**Reportado por:** {r_foto['Usuario']} | **Riesgo:** {r_foto['Tipo Riesgo']}")
+
 # ========================================================
-# ROL 2: CENTRAL ADMINISTRADOR (DASHBOARD TIPO VERIFTY FLOW)
+# ROL 2: CENTRAL ADMINISTRADOR
 # ========================================================
 else:
     if not st.session_state["admin_autenticado"]:
         st.warning("🔒 Acceso Restringido - Central Empresarial Verifty SST")
-        st.info("Ingresa tus credenciales en el menú lateral para desbloquear el Dashboard.")
-        st.markdown("""
-        * **Usuario Administrador:** `SysAdmin`
-        * **Contraseña de Acceso:** `097`
-        """)
+        st.info("Por favor, ingresa tus credenciales en el menú lateral para acceder al Panel de Mando.")
     else:
         df_rep = pd.DataFrame(st.session_state["reportes"])
 
-        # GRID PRINCIPAL DE TARJETAS TIPO VERIFTY
         col_m1, col_m2, col_m3, col_m4 = st.columns([1, 1, 1.4, 1.2])
 
         with col_m1:
@@ -486,20 +545,20 @@ else:
                 <div class="v-card">
                     <div class="v-metric-title">Índice de Frecuencia</div>
                     <div class="v-metric-num">0</div>
-                    <div class="v-metric-sub">Último mes calculated con HHT</div>
+                    <div class="v-metric-sub">Último mes calculado con HHT</div>
                 </div>
             """, unsafe_allow_html=True)
 
         st.write("---")
 
-        # PESTAÑAS DE CONTROL COMPLETO
-        tab_executive, tab_copilot, tab_management, tab_map, tab_controls, tab_database = st.tabs([
+        tab_executive, tab_copilot, tab_management, tab_galeria_admin, tab_map, tab_controls, tab_database = st.tabs([
             "📈 1. Tendencia & Gráficos", 
             "🤖 2. Copilot Gemini IA & Causa Raíz", 
             "✍️ 3. Gestión & Respuesta de Casos", 
-            "🗺️ 4. Sala de Crisis & Mapa GPS", 
-            "🎛️ 5. Switch Master On/Off & Ajustes", 
-            "💾 6. BBDD Consolidada & Exportación"
+            "📷 4. Galería Fotográfica de Casos",
+            "🗺️ 5. Sala de Crisis & Mapa GPS", 
+            "🎛️ 6. Switch Master On/Off", 
+            "💾 7. BBDD Consolidada & Exportación"
         ])
 
         with tab_executive:
@@ -591,6 +650,19 @@ else:
                     st.session_state["reportes"][idx_gestion]["Respuesta_Admin"] = respuesta_admin
                     st.success(f"✅ Registro **{id_gestion}** actualizado correctamente.")
                     st.rerun()
+
+        with tab_galeria_admin:
+            st.subheader("📷 Galería Fotográfica General de Casos")
+            reportes_con_foto_admin = [r for r in st.session_state["reportes"] if r.get("Foto") is not None]
+            
+            if not reportes_con_foto_admin:
+                st.info("ℹ️ No hay fotos registradas en la base de datos por el momento.")
+            else:
+                cols_galeria_adm = st.columns(3)
+                for idx, r_foto in enumerate(reportes_con_foto_admin):
+                    with cols_galeria_adm[idx % 3]:
+                        st.image(r_foto["Foto"], caption=f"Caso: {r_foto['ID']} - {r_foto['Ubicación']}", use_container_width=True)
+                        st.caption(f"**Reportante:** {r_foto['Usuario']} | **Estado:** {r_foto['Estado']}")
 
         with tab_map:
             st.subheader("🗺️ Sala de Crisis & Mapa de Calor Georreferenciado")
