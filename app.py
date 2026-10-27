@@ -1,10 +1,18 @@
 import streamlit as st
 import pandas as pd
 from streamlit_js_eval import get_geolocation
+import os
+
+# Intentar importar la API de Gemini
+try:
+    from google import genai
+    HAS_GEMINI = True
+except ImportError:
+    HAS_GEMINI = False
 
 # Configuración inicial de la página
 st.set_page_config(
-    page_title="SST 5.0 + IA - Semillero CUN",
+    page_title="SST 5.0 + IA Real - Semillero CUN",
     page_icon="🛡️",
     layout="wide"
 )
@@ -37,23 +45,9 @@ if "reportes" not in st.session_state:
             "Estado": "Validado / En Gestión",
             "Respuesta_Admin": "Se programó mantenimiento preventivo de ventilación.",
             "Responsable": "Infraestructura IT"
-        },
-        {
-            "ID": "REP-003", 
-            "Usuario": "Luis Quintero", 
-            "Ubicación": "Línea Robótica 3", 
-            "Latitud": 4.6105, 
-            "Longitud": -74.0820, 
-            "Tipo Riesgo": "Mecánico (Maquinaria/Herramientas/Atrapamiento)", 
-            "Severidad": "Crítica", 
-            "Descripción": "Sensor de proximidad de brazo robótico presenta latencia intermitente.", 
-            "Estado": "Atendido / Cerrado",
-            "Respuesta_Admin": "Parada de seguridad preventiva ejecutada. Sensor reemplazado bajo ISO 10218.",
-            "Responsable": "Mantenimiento Industrial"
         }
     ]
 
-# Contador para garantizar IDs únicos e irrepetibles
 if "contador_id" not in st.session_state:
     st.session_state["contador_id"] = len(st.session_state["reportes"]) + 1
 
@@ -68,28 +62,35 @@ st.markdown("""
     .role-badge {background-color:#E0E7FF; color:#3730A3; padding:6px 14px; border-radius:20px; font-weight:bold;}
     .report-card-admin {background-color:#F8FAFC; padding:16px; border-radius:10px; border-left:5px solid #2563EB; margin-bottom:15px;}
     .report-card-user {background-color:#F0FDF4; padding:16px; border-radius:10px; border-left:5px solid #16A34A; margin-bottom:15px;}
+    .ai-box {background-color:#F3F4F6; padding:15px; border-radius:10px; border:1px solid #D1D5DB; margin-top:10px;}
     </style>
 """, unsafe_allow_html=True)
 
 # Encabezado Principal
-st.markdown('<p class="main-title">🛡️ Sistema Integrado SST 5.0 + IA & Gobernanza Algorítmica</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">Plataforma de Control Empresarial | Dirección Nacional de Investigación - CUN</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">🛡️ Sistema Integrado SST 5.0 + Gemini IA (En Línea)</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">Plataforma de Control Empresarial con Inteligencia Artificial Generativa | Semillero CUN</p>', unsafe_allow_html=True)
 st.write("---")
 
 # Menú Lateral
-st.sidebar.title("🔐 Control de Acceso")
+st.sidebar.title("🔐 Control de Acceso & API Key")
 
 rol_seleccionado = st.sidebar.selectbox(
     "Selecciona tu perfil/rol:",
     [
         "👷 Usuario / Invitado (Reporte & Consulta Personal)",
-        "🔒 Administrador (Super Dashboard Empresarial)"
+        "🔒 Administrador (Super Dashboard + Copilot Gemini)"
     ]
 )
 
 st.sidebar.write("---")
 
-# Validación de Login
+# Configuración de Clave API de Gemini
+st.sidebar.subheader("🤖 Configuración de Gemini IA")
+gemini_api_key = st.sidebar.text_input("Ingresa tu Gemini API Key (Opcional):", type="password", help="Obtén una clave gratis en Google AI Studio (aistudio.google.com)")
+
+st.sidebar.write("---")
+
+# Validación de Login Administrador
 if "Administrador" in rol_seleccionado:
     if not st.session_state["admin_autenticado"]:
         st.sidebar.subheader("🔑 Iniciar Sesión de Administrador")
@@ -112,17 +113,29 @@ if "Administrador" in rol_seleccionado:
 st.sidebar.markdown(f"**Perfil activo:** <br><span class='role-badge'>{rol_seleccionado}</span>", unsafe_allow_html=True)
 st.sidebar.write("---")
 
+# Función para consultar Gemini API
+def consultar_gemini(prompt_texto, api_key):
+    if not api_key:
+        return None
+    try:
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt_texto,
+        )
+        return response.text
+    except Exception as e:
+        return f"Error al conectar con Gemini: {str(e)}"
+
 # ========================================================
-# ROL 1: USUARIO / INVITADO (REGISTRO Y CONSULTA DE HISTORIAL PERSONAL)
+# ROL 1: USUARIO / INVITADO (REGISTRO Y CONSULTA PERSONAL)
 # ========================================================
 if "Usuario / Invitado" in rol_seleccionado:
     st.header("👷 Módulo de Trabajo para Usuarios & Operarios")
     
     tab_nuevo_rep, tab_mis_reportes = st.tabs(["📝 Registrar Nuevo Reporte (ID Único)", "📋 Consultar Mis Reportes Registrados"])
 
-    # --- PESTAÑA 1: NUEVO REPORTE ---
     with tab_nuevo_rep:
-        # Generación del número de reporte único
         id_unico_generado = f"REP-{st.session_state['contador_id']:03d}"
         st.info(f"🆔 **Número de Reporte Único Asignado Automáticamente:** `{id_unico_generado}`")
 
@@ -187,17 +200,14 @@ if "Usuario / Invitado" in rol_seleccionado:
                     "Responsable": "Por Asignar"
                 }
                 st.session_state["reportes"].append(nuevo_reporte)
-                st.session_state["contador_id"] += 1  # Incrementar contador para el siguiente reporte único
+                st.session_state["contador_id"] += 1
                 st.success(f"✅ ¡Reporte **{id_unico_generado}** guardado con éxito para el usuario **{nombre}**!")
                 st.rerun()
             else:
                 st.warning("⚠️ Por favor completa tu nombre, ubicación y descripción del evento.")
 
-    # --- PESTAÑA 2: CONSULTA POR USUARIO ---
     with tab_mis_reportes:
         st.subheader("🔍 Mis Reportes Registrados")
-        st.write("Filtra el historial por el nombre del usuario para ver el estado de tus solicitudes:")
-
         df_todos = pd.DataFrame(st.session_state["reportes"])
         usuarios_unicos = list(df_todos["Usuario"].unique()) if not df_todos.empty else []
 
@@ -220,7 +230,7 @@ if "Usuario / Invitado" in rol_seleccionado:
                 """, unsafe_allow_html=True)
 
 # ========================================================
-# ROL 2: ADMINISTRADOR (SUPER DASHBOARD EMPRESARIAL SST + IA)
+# ROL 2: ADMINISTRADOR (INTEGRACIÓN GEMINI IA EN LÍNEA)
 # ========================================================
 else:
     if not st.session_state["admin_autenticado"]:
@@ -231,140 +241,8 @@ else:
         * **Contraseña de Acceso:** `097`
         """)
     else:
-        st.header("🔒 Centro de Control Empresarial de SST & Copilot IA")
+        st.header("🔒 Centro de Control Empresarial & Copilot Gemini IA")
         
         df_rep = pd.DataFrame(st.session_state["reportes"])
 
-        tab_executive, tab_copilot, tab_management, tab_map, tab_database = st.tabs([
-            "📊 Dashboard Ejecutivo & KPIs", 
-            "🤖 Copilot IA & Diagnóstico Normativo", 
-            "✍️ Centro de Respuesta & Edición", 
-            "🗺️ Mapa en Tiempo Real", 
-            "💾 Base de Datos por Usuario"
-        ])
-
-        # --- TAB 1: DASHBOARD ---
-        with tab_executive:
-            st.subheader("📈 Indicadores Clave de Gestión (KPIs de SST)")
-            
-            total_casos = len(df_rep)
-            pendientes = len(df_rep[df_rep["Estado"].str.contains("Pendiente|Nuevo")])
-            atendidos = len(df_rep[df_rep["Estado"].str.contains("Atendido|Cerrado")])
-            criticos = len(df_rep[df_rep["Severidad"].isin(["Alta", "Crítica"])])
-            pct_cumplimiento = (atendidos / total_casos * 100) if total_casos > 0 else 0
-
-            kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
-            kpi1.metric("Total Incidentes", total_casos)
-            kpi2.metric("Pendientes", pendientes, delta=f"{pendientes} requeridos", delta_color="inverse")
-            kpi3.metric("Atendidos / Cerrados", atendidos)
-            kpi4.metric("Nivel Crítico / Alto", criticos, delta=f"{criticos} en alerta", delta_color="inverse")
-            kpi5.metric("Efectividad SST", f"{pct_cumplimiento:.1f}%")
-
-            st.write("---")
-            col_chart1, col_chart2 = st.columns(2)
-
-            with col_chart1:
-                st.markdown("##### 📌 Distribución por Nivel de Severidad")
-                chart_sev = df_rep["Severidad"].value_counts()
-                st.bar_chart(chart_sev)
-
-            with col_chart2:
-                st.markdown("##### 🏢 Clasificación por Categorías de Riesgo")
-                chart_cat = df_rep["Tipo Riesgo"].value_counts()
-                st.bar_chart(chart_cat)
-
-        # --- TAB 2: COPILOT IA ---
-        with tab_copilot:
-            st.subheader("🤖 Asistente Virtual Inteligente (NLP Copilot SST)")
-            ids_disponibles = [r["ID"] for r in st.session_state["reportes"]]
-            sel_id_ia = st.selectbox("Seleccionar Reporte Único para Análisis Algorítmico:", ids_disponibles)
-
-            rep_ia = next(r for r in st.session_state["reportes"] if r["ID"] == sel_id_ia)
-
-            st.markdown(f"""
-            <div class="report-card-admin">
-            <b>🆔 Reporte Único:</b> {rep_ia['ID']} | <b>Usuario Reportado:</b> {rep_ia['Usuario']} | <b>Ubicación:</b> {rep_ia['Ubicación']}<br>
-            <b>Categoría:</b> {rep_ia['Tipo Riesgo']} | <b>Severidad:</b> {rep_ia['Severidad']}<br>
-            <b>Descripción:</b> {rep_ia['Descripción']}
-            </div>
-            """, unsafe_allow_html=True)
-
-            if st.button("✨ Generar Diagnóstico Normativo con IA"):
-                st.write("---")
-                cat_desc = (rep_ia["Tipo Riesgo"] + " " + rep_ia["Descripción"]).lower()
-
-                if "ergonómico" in cat_desc or "postura" in cat_desc or "silla" in cat_desc:
-                    st.info("📌 **Diagnóstico Biomecánico:** Riesgo de Trastornos Musculoesqueléticos (TME) por sobrecarga postural[cite: 2].")
-                    st.warning("⚠️ **Plan de Acción:** Evaluación postural RULA/REBA, pausas activas e instalación de sensores IMU[cite: 2, 10, 11].")
-                elif "mecánico" in cat_desc or "brazo" in cat_desc or "robot" in cat_desc:
-                    st.error("🚨 **Diagnóstico de Seguridad Industrial:** Riesgo mecánico o de colisión física en área robótica[cite: 2].")
-                    st.markdown("🔒 **Plan de Acción:** Parada de emergencia determinista (CBF)[cite: 2, 11] e inspección bajo estándar **ISO 10218** e **ISO/TS 15066**[cite: 2].")
-                else:
-                    st.success("✅ **Diagnóstico Estándar:** Incidente locativo general. Programar inspección física.")
-
-        # --- TAB 3: EDICIÓN Y RESPUESTA ---
-        with tab_management:
-            st.subheader("✍️ Centro de Validación y Gestión de Casos")
-            col_sel, col_del = st.columns([3, 1])
-            with col_sel:
-                id_gestion = st.selectbox("Seleccionar Reporte Único a Responder:", ids_disponibles, key="select_gestion")
-            
-            idx_gestion = next(i for i, r in enumerate(st.session_state["reportes"]) if r["ID"] == id_gestion)
-            r_edit = st.session_state["reportes"][idx_gestion]
-
-            with col_del:
-                st.write("")
-                st.write("")
-                if st.button("🗑️ Eliminar Reporte", type="primary"):
-                    st.session_state["reportes"].pop(idx_gestion)
-                    st.success(f"Reporte {id_gestion} eliminado de la base de datos.")
-                    st.rerun()
-
-            with st.form("form_edit_admin"):
-                c_a, c_b = st.columns(2)
-                with c_a:
-                    nuevo_estado = st.selectbox(
-                        "Estado del Reporte:",
-                        ["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"],
-                        index=["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"].index(r_edit["Estado"]) if r_edit["Estado"] in ["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"] else 0
-                    )
-                    responsable = st.text_input("Responsable / Área Asignada:", value=r_edit.get("Responsable", "Especialista SST"))
-
-                with c_b:
-                    respuesta_admin = st.text_area("Respuesta Oficial / Plan de Intervención:", value=r_edit.get("Respuesta_Admin", ""))
-
-                btn_guardar_cambios = st.form_submit_button("💾 Guardar y Notificar al Usuario")
-
-                if btn_guardar_cambios:
-                    st.session_state["reportes"][idx_gestion]["Estado"] = nuevo_estado
-                    st.session_state["reportes"][idx_gestion]["Responsable"] = responsable
-                    st.session_state["reportes"][idx_gestion]["Respuesta_Admin"] = respuesta_admin
-                    st.success(f"✅ Reporte **{id_gestion}** actualizado y disponible en el panel del usuario **{r_edit['Usuario']}**.")
-                    st.rerun()
-
-        # --- TAB 4: MAPA ---
-        with tab_map:
-            st.subheader("📍 Georreferenciación Espacial de Hallazgos")
-            df_mapa = df_rep.rename(columns={"Latitud": "lat", "Longitud": "lon"})
-            st.map(df_mapa[["lat", "lon"]], zoom=13)
-
-        # --- TAB 5: BBDD ---
-        with tab_database:
-            st.subheader("💾 Consolidado General Registrado por Usuario")
-            
-            user_filter = st.selectbox("Filtrar BBDD por Usuario:", ["Todos los Usuarios"] + list(df_rep["Usuario"].unique()))
-            
-            if user_filter != "Todos los Usuarios":
-                df_export = df_rep[df_rep["Usuario"] == user_filter]
-            else:
-                df_export = df_rep
-
-            st.dataframe(df_export, use_container_width=True)
-
-            csv_export = df_export.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Descargar Base de Datos Filtrada (CSV / Excel)",
-                data=csv_export,
-                file_name="Base_Datos_Reportes_SST_CUN.csv",
-                mime="text/csv"
-            )
+        tab_executive, tab_copilot, tab_management,
