@@ -443,4 +443,79 @@ else:
                 else:
                     st.info("💡 **Dictamen del Motor Heurístico de la Central (Matriz SST 5.0):**")
                     html_diagnostico = generar_analisis_avanzado_sst(rep_ia)
-                    st.markdown(html_diagnostico, unsafe_allow_html
+                    st.markdown(html_diagnostico, unsafe_allow_html=True)
+
+        with tab_management:
+            st.subheader("✍️ Centro de Validación, Asignación y Respuesta Oficial")
+            col_sel, col_del = st.columns([3, 1])
+            with col_sel:
+                id_gestion = st.selectbox("Seleccionar Reporte Único a Responder/Editar:", ids_disponibles, key="select_gestion")
+            
+            idx_gestion = next(i for i, r in enumerate(st.session_state["reportes"]) if r["ID"] == id_gestion)
+            r_edit = st.session_state["reportes"][idx_gestion]
+
+            with col_del:
+                st.write("")
+                st.write("")
+                if st.button("🗑️ Eliminar Reporte", type="primary"):
+                    st.session_state["reportes"].pop(idx_gestion)
+                    st.success(f"Reporte {id_gestion} eliminado de la Central.")
+                    st.rerun()
+
+            with st.form("form_edit_admin"):
+                c_a, c_b = st.columns(2)
+                with c_a:
+                    nuevo_estado = st.selectbox(
+                        "Estado de la Solicitud:",
+                        ["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"],
+                        index=["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"].index(r_edit["Estado"]) if r_edit["Estado"] in ["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"] else 0
+                    )
+                    responsable = st.text_input("Asignar Área/Responsable de Caso:", value=r_edit.get("Responsable", "Comité SST"))
+
+                with c_b:
+                    respuesta_admin = st.text_area("Respuesta Oficial / Plan de Intervención:", value=r_edit.get("Respuesta_Admin", ""))
+
+                btn_guardar_cambios = st.form_submit_button("💾 Guardar Cambios en BBDD")
+
+                if btn_guardar_cambios:
+                    st.session_state["reportes"][idx_gestion]["Estado"] = nuevo_estado
+                    st.session_state["reportes"][idx_gestion]["Responsable"] = responsable
+                    st.session_state["reportes"][idx_gestion]["Respuesta_Admin"] = respuesta_admin
+                    st.success(f"✅ Registro **{id_gestion}** actualizado correctamente.")
+                    st.rerun()
+
+        with tab_map:
+            st.subheader("🗺️ Sala de Crisis & Mapa de Calor Georreferenciado")
+            df_mapa = df_rep.rename(columns={"Latitud": "lat", "Longitud": "lon"})
+            st.map(df_mapa[["lat", "lon"]], zoom=13)
+
+        with tab_controls:
+            st.subheader("🎛️ Centro de Mando Master & Disponibilidad del Servicio")
+            st.write("Controla la disponibilidad pública para la recepción de reportes desde cualquier dispositivo:")
+            
+            col_c1, col_c2 = st.columns(2)
+            with col_c1:
+                nuevo_estado_switch = st.toggle("🟢 Prender (EN LÍNEA) / 🔴 Apagar (FUERA DE LÍNEA)", value=st.session_state["recepcion_activa"])
+                if nuevo_estado_switch != st.session_state["recepcion_activa"]:
+                    st.session_state["recepcion_activa"] = nuevo_estado_switch
+                    st.rerun()
+
+            with col_c2:
+                if st.session_state["recepcion_activa"]:
+                    st.success("✅ **Estado Global:** EN LÍNEA (Recepción de reportes habilitada)")
+                else:
+                    st.error("🚨 **Estado Global:** FUERA DE LÍNEA (Formulario bloqueado en modo mantenimiento)")
+
+        with tab_database:
+            st.subheader("💾 Consolidado General Registrado por Usuario")
+            user_filter = st.selectbox("Filtrar BBDD por Usuario:", ["Todos los Usuarios"] + list(df_rep["Usuario"].unique()))
+            df_export = df_rep[df_rep["Usuario"] == user_filter] if user_filter != "Todos los Usuarios" else df_rep
+            st.dataframe(df_export, use_container_width=True)
+
+            csv_export = df_export.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Descargar Base de Datos Consolidada (CSV / Excel)",
+                data=csv_export,
+                file_name="Base_Datos_SST_Central_CUN.csv",
+                mime="text/csv"
+            )
