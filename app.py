@@ -10,9 +10,9 @@ try:
 except ImportError:
     HAS_GEMINI_LIB = False
 
-# Configuración inicial de la página
+# Configuración de la página
 st.set_page_config(
-    page_title="Central SST 5.0 + Gemini IA - Semillero CUN",
+    page_title="Central SST 5.0 - Verifty Flow Style",
     page_icon="🛡️",
     layout="wide"
 )
@@ -20,7 +20,7 @@ st.set_page_config(
 # Detectar API Key desde Secrets de Streamlit
 GEMINI_KEY = st.secrets.get("GEMINI_API_KEY", None)
 
-# Estado Global: Activar/Desactivar Recepción de Reportes (Por defecto: True)
+# Estado Global de Recepción de Reportes
 if "recepcion_activa" not in st.session_state:
     st.session_state["recepcion_activa"] = True
 
@@ -38,7 +38,8 @@ if "reportes" not in st.session_state:
             "Descripción": "Posturas forzadas por altura inadecuada de la mesa de empaque.", 
             "Estado": "En Revisión",
             "Respuesta_Admin": "Pendiente de visita técnica por especialista en ergonomía.",
-            "Responsable": "Comité SST / Ergonomía"
+            "Responsable": "Comité SST / Ergonomía",
+            "Zona_Cuerpo": "Tronco / Espalda"
         },
         {
             "ID": "REP-002", 
@@ -51,7 +52,8 @@ if "reportes" not in st.session_state:
             "Descripción": "Exceso de ruido en servidor secundario y sobrecalentamiento en Rack 2.", 
             "Estado": "Validado / En Gestión",
             "Respuesta_Admin": "Se programó mantenimiento preventivo de sistema de ventilación HVAC.",
-            "Responsable": "Infraestructura & Soporte IT"
+            "Responsable": "Infraestructura & Soporte IT",
+            "Zona_Cuerpo": "Cabeza / Cara"
         },
         {
             "ID": "REP-003", 
@@ -64,7 +66,8 @@ if "reportes" not in st.session_state:
             "Descripción": "Sensor de proximidad de brazo robótico presenta latencia intermitente.", 
             "Estado": "Atendido / Cerrado",
             "Respuesta_Admin": "Parada preventiva ejecutada. Sensor reconfigurado bajo norma ISO 10218.",
-            "Responsable": "Mantenimiento Industrial & Mecatrónica"
+            "Responsable": "Mantenimiento Industrial & Mecatrónica",
+            "Zona_Cuerpo": "Brazo derecho"
         }
     ]
 
@@ -75,96 +78,41 @@ if "admin_autenticado" not in st.session_state:
     st.session_state["admin_autenticado"] = False
 
 # ========================================================
-# SECTOR DE BARRA LATERAL: TEMA CLARO / OSCURO & LOGIN
+# BARRA LATERAL (ESTILO VERIFTY FLOW)
 # ========================================================
-st.sidebar.title("🎨 Apariencia & Acceso")
+st.sidebar.markdown("""
+    <div style="text-align: center; padding-bottom: 15px;">
+        <h2 style="color: #4F46E5; margin:0;"><b>verifty</b></h2>
+        <span style="font-size: 11px; color: #6B7280;">SST FLOW 5.0</span>
+    </div>
+""", unsafe_allow_html=True)
 
-# Conmutador / Selector de Tema
+# Logos en la barra lateral si existen
+col_sb1, col_sb2 = st.sidebar.columns(2)
+with col_sb1:
+    if os.path.exists("mi_logo.jpg"):
+        st.image("mi_logo.jpg", width=65)
+with col_sb2:
+    if os.path.exists("logo_cun.png"):
+        st.image("logo_cun.png", width=65)
+
+st.sidebar.write("---")
+
+st.sidebar.title("🎨 Apariencia & Rol")
+
 tema_seleccionado = st.sidebar.radio(
-    "Selecciona el Tema de la Interfaz:",
-    ["☀️ Modo Claro", "🌙 Modo Oscuro"],
+    "Selecciona el Tema:",
+    ["☀️ Modo Claro (Verifty)", "🌙 Modo Oscuro"],
     index=0
 )
 
 st.sidebar.write("---")
 
-# Aplicación dinámicas de estilos CSS según el tema
-if tema_seleccionado == "🌙 Modo Oscuro":
-    st.markdown("""
-        <style>
-        .stApp {
-            background-color: #0F172A;
-            color: #F8FAFC;
-        }
-        .main-title {font-size:26px; font-weight:bold; color:#38BDF8; margin-bottom:0px;}
-        .sub-title {font-size:14px; color:#94A3B8; margin-bottom:15px;}
-        .role-badge {background-color:#1E293B; color:#38BDF8; padding:5px 12px; border-radius:15px; font-weight:bold; border:1px solid #334155;}
-        
-        .status-online {background-color:#064E3B; color:#6EE7B7; border:1px solid #059669; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
-        .status-offline {background-color:#7F1D1D; color:#FCA5A5; border:1px solid #DC2626; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
-        
-        .report-card-admin {background-color:#1E293B; padding:16px; border-radius:10px; border-left:5px solid #38BDF8; margin-bottom:12px; color:#F8FAFC;}
-        .report-card-user {background-color:#064E3B; padding:16px; border-radius:10px; border-left:5px solid #10B981; margin-bottom:12px; color:#F8FAFC;}
-        .ai-box {background-color:#1E293B; padding:18px; border-radius:10px; border:1px solid #334155; margin-top:10px; line-height:1.6; color:#F8FAFC;}
-        </style>
-    """, unsafe_allow_html=True)
-else:
-    st.markdown("""
-        <style>
-        .main-title {font-size:26px; font-weight:bold; color:#0F172A; margin-bottom:0px;}
-        .sub-title {font-size:14px; color:#475569; margin-bottom:15px;}
-        .role-badge {background-color:#E0E7FF; color:#3730A3; padding:5px 12px; border-radius:15px; font-weight:bold;}
-        
-        .status-online {background-color:#DCFCE7; color:#15803D; border:1px solid #86EFAC; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
-        .status-offline {background-color:#FEE2E2; color:#B91C1C; border:1px solid #FCA5A5; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
-        
-        .report-card-admin {background-color:#F8FAFC; padding:16px; border-radius:10px; border-left:5px solid #0284C7; margin-bottom:12px;}
-        .report-card-user {background-color:#F0FDF4; padding:16px; border-radius:10px; border-left:5px solid #16A34A; margin-bottom:12px;}
-        .ai-box {background-color:#F8FAFC; padding:18px; border-radius:10px; border:1px solid #CBD5E1; margin-top:10px; line-height:1.6;}
-        </style>
-    """, unsafe_allow_html=True)
-
-# ========================================================
-# ENCABEZADO CON LOGOS EN LAS ESQUINAS
-# ========================================================
-col_logo_app, col_header, col_logo_cun, col_status = st.columns([1, 4, 1, 1.2])
-
-with col_logo_app:
-    if os.path.exists("mi_logo.jpg"):
-        st.image("mi_logo.jpg", width=90)
-    else:
-        st.markdown("🦉")
-
-with col_header:
-    st.markdown('<p class="main-title">🏢 Central 360° de Control Empresarial SST 5.0</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-title">Sistema Integrado de Gestión, Gobernanza Algorítmica & Respuesta a Incidentes | Semillero CUN</p>', unsafe_allow_html=True)
-
-with col_logo_cun:
-    if os.path.exists("logo_cun.png"):
-        st.image("logo_cun.png", width=90)
-    else:
-        st.markdown("🏛️ **CUN**")
-
-with col_status:
-    st.write("")
-    if st.session_state["recepcion_activa"]:
-        st.markdown('<div class="status-online">🟢 EN LÍNEA</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="status-offline">🔴 PAUSADO</div>', unsafe_allow_html=True)
-
-st.write("---")
-
-# Logo institucional en barra lateral
-if os.path.exists("logo_cun.png"):
-    st.sidebar.image("logo_cun.png", use_container_width=True)
-
-st.sidebar.title("🔐 Control de Acceso")
-
 rol_seleccionado = st.sidebar.selectbox(
     "Selecciona tu perfil/rol:",
     [
-        "👷 Usuario / Operario (Reporte & Consulta Personal)",
-        "🔒 Central Administrador (Dashboard Empresarial 360°)"
+        "👷 Usuario / Operario (Reporte & Consulta)",
+        "🔒 Central Administrador (Dashboard Verifty SST)"
     ]
 )
 
@@ -180,7 +128,7 @@ if GEMINI_KEY:
 
 st.sidebar.write("---")
 
-# Login de Administrador
+# Login Administrador
 if "Central Administrador" in rol_seleccionado:
     if not st.session_state["admin_autenticado"]:
         st.sidebar.subheader("🔑 Iniciar Sesión SysAdmin")
@@ -200,8 +148,83 @@ if "Central Administrador" in rol_seleccionado:
             st.session_state["admin_autenticado"] = False
             st.rerun()
 
-st.sidebar.markdown(f"**Perfil activo:** <br><span class='role-badge'>{rol_seleccionado}</span>", unsafe_allow_html=True)
-st.sidebar.write("---")
+# ========================================================
+# ESTILOS CSS PERSONALIZADOS (ESTILO VERIFTY)
+# ========================================================
+if tema_seleccionado == "🌙 Modo Oscuro":
+    st.markdown("""
+        <style>
+        .stApp { background-color: #0F172A; color: #F8FAFC; }
+        .v-card { background-color: #1E293B; border-radius: 12px; padding: 18px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); margin-bottom: 15px; }
+        .v-metric-num { font-size: 28px; font-weight: bold; color: #38BDF8; }
+        .v-metric-title { font-size: 11px; font-weight: 700; color: #38BDF8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .v-metric-sub { font-size: 12px; color: #94A3B8; }
+        .v-alert { background-color: #7F1D1D; border-left: 5px solid #EF4444; color: #FECDD3; padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; }
+        .v-banner { background-color: #1E1B4B; border: 1px solid #4338CA; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+        <style>
+        .stApp { background-color: #F4F6FC; color: #1E293B; }
+        .v-card { background-color: #FFFFFF; border-radius: 14px; padding: 18px; border: 1px solid #E2E8F0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px; }
+        .v-metric-num { font-size: 30px; font-weight: bold; color: #1E293B; }
+        .v-metric-title { font-size: 11px; font-weight: 800; color: #4F46E5; text-transform: uppercase; letter-spacing: 0.6px; }
+        .v-metric-sub { font-size: 12px; color: #64748B; }
+        .v-alert { background-color: #FEF2F2; border-left: 5px solid #EF4444; color: #991B1B; padding: 12px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; margin-bottom: 20px; }
+        .v-banner { background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+        .v-progress-bg { background-color: #EEF2FF; border-radius: 10px; height: 10px; overflow: hidden; margin-top: 4px; }
+        .v-progress-fill { background: linear-gradient(90deg, #6366F1 0%, #3B82F6 100%); height: 100%; border-radius: 10px; }
+        </style>
+    """, unsafe_allow_html=True)
+
+# ========================================================
+# HEADER ESTILO NAVBAR VERIFTY
+# ========================================================
+col_head_left, col_head_right = st.columns([3, 1])
+
+with col_head_left:
+    st.markdown("""
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div>
+                <h2 style="margin:0; font-size:24px; font-weight:800; color:#4F46E5;">Hola, Ana</h2>
+                <p style="margin:0; font-size:14px; color:#64748B;">Panel de Seguridad y Salud en el Trabajo | CUN & Verifty Flow</p>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col_head_right:
+    st.markdown("""
+        <div style="text-align:right;">
+            <p style="margin:0; font-size:12px; font-weight:600; color:#64748B;">Martes, 18 de Agosto de 2026</p>
+            <span style="background-color:#EEF2FF; color:#4338CA; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">Coordinadora SST 🔔</span>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.write("")
+
+# ========================================================
+# BANNER DE CONFIGURACIÓN Y ALERTA NORMATIVA
+# ========================================================
+st.markdown("""
+    <div class="v-banner">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <span style="font-weight:bold; color:#4F46E5; font-size:14px;">⚙️ Configura tu empresa: 2/7 pasos completados</span><br>
+                <span style="font-size:12px; color:#64748B;">Haz clic en el módulo para continuar la implementación de ISO 45001</span>
+            </div>
+            <div>
+                <span style="background-color:#4F46E5; color:white; padding:6px 16px; border-radius:20px; font-size:12px; font-weight:bold;">28% listo</span>
+            </div>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+    <div class="v-alert">
+        ⚠️ <b>5 accidentes graves o mortales sin reportar a Mintrabajo</b> — Resolución 1401 de 2014
+    </div>
+""", unsafe_allow_html=True)
 
 # Función para consultar Gemini API
 def consultar_gemini_real(prompt_texto, api_key):
@@ -215,7 +238,7 @@ def consultar_gemini_real(prompt_texto, api_key):
     except Exception as e:
         return f"Error en la llamada a la API: {str(e)}"
 
-# Generador de Diagnóstico Heurístico Avanzado SST 5.0
+# Diagnóstico Heurístico Avanzado
 def generar_analisis_avanzado_sst(rep):
     cat = rep["Tipo Riesgo"]
     desc = rep["Descripción"].lower()
@@ -240,8 +263,8 @@ def generar_analisis_avanzado_sst(rep):
         norma = "<b>ISO 45001:2018</b> (Sistemas de Gestión de Seguridad y Salud en el Trabajo)."
 
     return f"""
-    <div class="ai-box">
-    <h4 style="margin-top:0px;">🔬 Dictamen Técnico de Inspección Automática (SST 5.0)</h4>
+    <div style="background-color:#F8FAFC; padding:18px; border-radius:12px; border:1px solid #CBD5E1; margin-top:10px;">
+    <h4 style="color:#4F46E5; margin-top:0px;">🔬 Dictamen Técnico de Inspección Automática (SST 5.0)</h4>
     <p><b>🆔 Reporte Evaluado:</b> <code>{rep['ID']}</code> | <b>Severidad:</b> <span style="color:#B91C1C; font-weight:bold;">{sev}</span></p>
     <hr style="border:0.5px solid #E2E8F0;">
     <p>🧠 <b>Causa Raíz Identificada:</b><br>{causa}</p>
@@ -324,7 +347,8 @@ if "Usuario / Operario" in rol_seleccionado:
                         "Descripción": descripcion,
                         "Estado": "Pendiente (Nuevo)",
                         "Respuesta_Admin": "Reporte recibido. En cola de revisión por la Central SST.",
-                        "Responsable": "Por Asignar"
+                        "Responsable": "Por Asignar",
+                        "Zona_Cuerpo": "Tronco / Espalda"
                     }
                     st.session_state["reportes"].append(nuevo_reporte)
                     st.session_state["contador_id"] += 1
@@ -347,7 +371,7 @@ if "Usuario / Operario" in rol_seleccionado:
 
             for mr in mis_reps:
                 st.markdown(f"""
-                <div class="report-card-user">
+                <div class="v-card">
                 <b>🆔 Número Único:</b> {mr['ID']} | <b>Ubicación:</b> {mr['Ubicación']}<br>
                 <b>Categoría:</b> {mr['Tipo Riesgo']} | <b>Severidad:</b> {mr['Severidad']}<br>
                 <b>Descripción:</b> {mr['Descripción']}<br>
@@ -357,62 +381,137 @@ if "Usuario / Operario" in rol_seleccionado:
                 """, unsafe_allow_html=True)
 
 # ========================================================
-# ROL 2: CENTRAL ADMINISTRADOR (360° EMPRESARIAL)
+# ROL 2: CENTRAL ADMINISTRADOR (DASHBOARD TIPO VERIFTY FLOW)
 # ========================================================
 else:
     if not st.session_state["admin_autenticado"]:
-        st.warning("🔒 Acceso Restringido - Central Empresarial de SST")
-        st.info("Ingresa tus credenciales en el menú lateral para desbloquear el Panel de Mando.")
+        st.warning("🔒 Acceso Restringido - Central Empresarial Verifty SST")
+        st.info("Ingresa tus credenciales en el menú lateral para desbloquear el Dashboard.")
         st.markdown("""
         * **Usuario Administrador:** `SysAdmin`
         * **Contraseña de Acceso:** `097`
         """)
     else:
-        st.header("🏢 Central 360° de Control Empresarial de SST & Copilot Gemini IA")
         df_rep = pd.DataFrame(st.session_state["reportes"])
 
+        # GRID PRINCIPAL DE TARJETAS TIPO VERIFTY (MÉTRICAS + ANÁLISIS DE ZONAS)
+        col_m1, col_m2, col_m3, col_m4 = st.columns([1, 1, 1.4, 1.2])
+
+        with col_m1:
+            st.markdown("""
+                <div class="v-card">
+                    <div class="v-metric-title">Reportes del Mes</div>
+                    <div class="v-metric-num">{}</div>
+                    <div class="v-metric-sub">Actos y condiciones inseguras</div>
+                </div>
+                <div class="v-card">
+                    <div class="v-metric-title">Tareas Pendientes</div>
+                    <div class="v-metric-num" style="color:#F59E0B;">{}</div>
+                    <div class="v-metric-sub">Esperando acción en la empresa</div>
+                </div>
+                <div class="v-card">
+                    <div class="v-metric-title">Incidentes del Año</div>
+                    <div class="v-metric-num">{}</div>
+                    <div class="v-metric-sub">Sin lesión, registrados en 2026</div>
+                </div>
+            """.format(len(df_rep), len(df_rep[df_rep["Estado"].str.contains("Pendiente|Nuevo")]), len(df_rep)), unsafe_allow_html=True)
+
+        with col_m2:
+            st.markdown("""
+                <div class="v-card">
+                    <div class="v-metric-title">Acciones Activas</div>
+                    <div class="v-metric-num">{}</div>
+                    <div class="v-metric-sub">En gestión operativa</div>
+                </div>
+                <div class="v-card">
+                    <div class="v-metric-title">Instancias Completadas</div>
+                    <div class="v-metric-num" style="color:#10B981;">{}</div>
+                    <div class="v-metric-sub">Flujos terminados este mes</div>
+                </div>
+                <div class="v-card">
+                    <div class="v-metric-title">Días Perdidos</div>
+                    <div class="v-metric-num">172</div>
+                    <div class="v-metric-sub">Incapacidad por accidentes</div>
+                </div>
+            """.format(len(df_rep[df_rep["Estado"].str.contains("Gestión|Revisión")]), len(df_rep[df_rep["Estado"].str.contains("Atendido|Cerrado")])), unsafe_allow_html=True)
+
+        with col_m3:
+            st.markdown("""
+                <div class="v-card">
+                    <div class="v-metric-title">🤺 Zonas del Cuerpo Afectadas</div>
+                    <div style="margin-top:10px; font-size:12px;">
+                        <b>Cabeza / Cara</b> <span style="float:right;">6</span>
+                        <div class="v-progress-bg"><div class="v-progress-fill" style="width:75%;"></div></div>
+                    </div>
+                    <div style="margin-top:8px; font-size:12px;">
+                        <b>Tronco / Espalda</b> <span style="float:right;">6</span>
+                        <div class="v-progress-bg"><div class="v-progress-fill" style="width:75%;"></div></div>
+                    </div>
+                    <div style="margin-top:8px; font-size:12px;">
+                        <b>Brazo derecho</b> <span style="float:right;">6</span>
+                        <div class="v-progress-bg"><div class="v-progress-fill" style="width:75%;"></div></div>
+                    </div>
+                    <div style="margin-top:8px; font-size:12px;">
+                        <b>Brazo izquierdo</b> <span style="float:right;">3</span>
+                        <div class="v-progress-bg"><div class="v-progress-fill" style="width:40%;"></div></div>
+                    </div>
+                    <div style="margin-top:8px; font-size:12px;">
+                        <b>Pierna derecha</b> <span style="float:right;">3</span>
+                        <div class="v-progress-bg"><div class="v-progress-fill" style="width:40%;"></div></div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        with col_m4:
+            st.markdown("""
+                <div class="v-card">
+                    <div class="v-metric-title">Instancias Activas</div>
+                    <div class="v-metric-num">8</div>
+                    <div class="v-metric-sub">Flujos en ejecución ahora</div>
+                </div>
+                <div class="v-card">
+                    <div class="v-metric-title">Accidentes del Año</div>
+                    <div class="v-metric-num" style="color:#EF4444;">24</div>
+                    <div class="v-metric-sub">Accidentes de trabajo en 2026</div>
+                </div>
+                <div class="v-card">
+                    <div class="v-metric-title">Índice de Frecuencia</div>
+                    <div class="v-metric-num">0</div>
+                    <div class="v-metric-sub">Último mes calculado con HHT</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.write("---")
+
+        # PESTAÑAS DE CONTROL COMPLETO TIPO VERIFTY FLOW
         tab_executive, tab_copilot, tab_management, tab_map, tab_controls, tab_database = st.tabs([
-            "📊 1. KPIs & Tablero Ejecutivo", 
+            "📈 1. Tendencia & Gráficos", 
             "🤖 2. Copilot Gemini IA & Causa Raíz", 
-            "✍️ 3. Gestión & Asignación de Casos", 
+            "✍️ 3. Gestión & Respuesta de Casos", 
             "🗺️ 4. Sala de Crisis & Mapa GPS", 
             "🎛️ 5. Switch Master On/Off & Ajustes", 
             "💾 6. BBDD Consolidada & Exportación"
         ])
 
         with tab_executive:
-            st.subheader("📈 Métricas Clave de Gestión Empresarial de SST")
-            total_casos = len(df_rep)
-            pendientes = len(df_rep[df_rep["Estado"].str.contains("Pendiente|Nuevo")])
-            atendidos = len(df_rep[df_rep["Estado"].str.contains("Atendido|Cerrado")])
-            criticos = len(df_rep[df_rep["Severidad"].isin(["Alta", "Crítica"])])
-            pct_cumplimiento = (atendidos / total_casos * 100) if total_casos > 0 else 0
-
-            m1, m2, m3, m4, m5 = st.columns(5)
-            m1.metric("Total Incidentes", total_casos)
-            m2.metric("Pendientes / Nuevos", pendientes)
-            m3.metric("Atendidos / Cerrados", atendidos)
-            m4.metric("Nivel Alto / Crítico", criticos)
-            m5.metric("Efectividad Cierre", f"{pct_cumplimiento:.1f}%")
-
-            st.write("---")
-            col_chart1, col_chart2 = st.columns(2)
-            with col_chart1:
-                st.markdown("##### 📌 Distribución por Severidad")
-                st.bar_chart(df_rep["Severidad"].value_counts())
-            with col_chart2:
-                st.markdown("##### 🏢 Clasificación por Categorías de Riesgo")
+            st.subheader("📉 Tendencia de Accidentalidad e Histórico de Instancias")
+            col_t1, col_t2 = st.columns([1.5, 1])
+            with col_t1:
+                st.markdown("##### 📌 Distribución por Categorías de Riesgo")
                 st.bar_chart(df_rep["Tipo Riesgo"].value_counts())
+            with col_t2:
+                st.markdown("##### 🏢 Severidad de Eventos")
+                st.bar_chart(df_rep["Severidad"].value_counts())
 
         with tab_copilot:
-            st.subheader("🤖 Asistente Virtual Copilot IA (Analítica Avanzada SST 5.0)")
+            st.subheader("🤖 Asistente Virtual Copilot IA (Analítica Avanzada Verifty)")
             ids_disponibles = [r["ID"] for r in st.session_state["reportes"]]
             sel_id_ia = st.selectbox("Seleccionar Reporte Único para Análisis de Causa Raíz:", ids_disponibles)
 
             rep_ia = next(r for r in st.session_state["reportes"] if r["ID"] == sel_id_ia)
 
             st.markdown(f"""
-            <div class="report-card-admin">
+            <div class="v-card">
             <b>🆔 Reporte Único:</b> {rep_ia['ID']} | <b>Usuario:</b> {rep_ia['Usuario']} | <b>Ubicación:</b> {rep_ia['Ubicación']}<br>
             <b>Categoría:</b> {rep_ia['Tipo Riesgo']} | <b>Severidad:</b> {rep_ia['Severidad']}<br>
             <b>Descripción:</b> {rep_ia['Descripción']}
@@ -439,9 +538,9 @@ else:
                     with st.spinner("Consultando al modelo Gemini 2.5 en la nube de Google..."):
                         respuesta_gemini = consultar_gemini_real(prompt_enviado, GEMINI_KEY)
                         st.success("✅ Dictamen en tiempo real por Gemini IA:")
-                        st.markdown(f'<div class="ai-box">{respuesta_gemini}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div style="background-color:#F8FAFC; padding:18px; border-radius:12px; border:1px solid #CBD5E1; color:#0F172A;">{respuesta_gemini}</div>', unsafe_allow_html=True)
                 else:
-                    st.info("💡 **Dictamen del Motor Heurístico de la Central (Matriz SST 5.0):**")
+                    st.info("💡 **Dictamen del Motor Heurístico Verifty (Matriz SST 5.0):**")
                     html_diagnostico = generar_analisis_avanzado_sst(rep_ia)
                     st.markdown(html_diagnostico, unsafe_allow_html=True)
 
@@ -491,8 +590,6 @@ else:
 
         with tab_controls:
             st.subheader("🎛️ Centro de Mando Master & Disponibilidad del Servicio")
-            st.write("Controla la disponibilidad pública para la recepción de reportes desde cualquier dispositivo:")
-            
             col_c1, col_c2 = st.columns(2)
             with col_c1:
                 nuevo_estado_switch = st.toggle("🟢 Prender (EN LÍNEA) / 🔴 Apagar (FUERA DE LÍNEA)", value=st.session_state["recepcion_activa"])
@@ -516,6 +613,6 @@ else:
             st.download_button(
                 label="📥 Descargar Base de Datos Consolidada (CSV / Excel)",
                 data=csv_export,
-                file_name="Base_Datos_SST_Central_CUN.csv",
+                file_name="Base_Datos_SST_Verifty_CUN.csv",
                 mime="text/csv"
             )
