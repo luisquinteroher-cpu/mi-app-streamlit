@@ -74,21 +74,55 @@ if "contador_id" not in st.session_state:
 if "admin_autenticado" not in st.session_state:
     st.session_state["admin_autenticado"] = False
 
-# Estilos CSS Avanzados
-st.markdown("""
-    <style>
-    .main-title {font-size:26px; font-weight:bold; color:#0F172A; margin-bottom:0px;}
-    .sub-title {font-size:14px; color:#475569; margin-bottom:15px;}
-    .role-badge {background-color:#E0E7FF; color:#3730A3; padding:5px 12px; border-radius:15px; font-weight:bold;}
-    
-    .status-online {background-color:#DCFCE7; color:#15803D; border:1px solid #86EFAC; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
-    .status-offline {background-color:#FEE2E2; color:#B91C1C; border:1px solid #FCA5A5; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
-    
-    .report-card-admin {background-color:#F8FAFC; padding:16px; border-radius:10px; border-left:5px solid #0284C7; margin-bottom:12px;}
-    .report-card-user {background-color:#F0FDF4; padding:16px; border-radius:10px; border-left:5px solid #16A34A; margin-bottom:12px;}
-    .ai-box {background-color:#F8FAFC; padding:18px; border-radius:10px; border:1px solid #CBD5E1; margin-top:10px; line-height:1.6;}
-    </style>
-""", unsafe_allow_html=True)
+# ========================================================
+# SECTOR DE BARRA LATERAL: TEMA CLARO / OSCURO & LOGIN
+# ========================================================
+st.sidebar.title("🎨 Apariencia & Acceso")
+
+# Conmutador / Selector de Tema
+tema_seleccionado = st.sidebar.radio(
+    "Selecciona el Tema de la Interfaz:",
+    ["☀️ Modo Claro", "🌙 Modo Oscuro"],
+    index=0
+)
+
+st.sidebar.write("---")
+
+# Aplicación dinámicas de estilos CSS según el tema
+if tema_seleccionado == "🌙 Modo Oscuro":
+    st.markdown("""
+        <style>
+        .stApp {
+            background-color: #0F172A;
+            color: #F8FAFC;
+        }
+        .main-title {font-size:26px; font-weight:bold; color:#38BDF8; margin-bottom:0px;}
+        .sub-title {font-size:14px; color:#94A3B8; margin-bottom:15px;}
+        .role-badge {background-color:#1E293B; color:#38BDF8; padding:5px 12px; border-radius:15px; font-weight:bold; border:1px solid #334155;}
+        
+        .status-online {background-color:#064E3B; color:#6EE7B7; border:1px solid #059669; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
+        .status-offline {background-color:#7F1D1D; color:#FCA5A5; border:1px solid #DC2626; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
+        
+        .report-card-admin {background-color:#1E293B; padding:16px; border-radius:10px; border-left:5px solid #38BDF8; margin-bottom:12px; color:#F8FAFC;}
+        .report-card-user {background-color:#064E3B; padding:16px; border-radius:10px; border-left:5px solid #10B981; margin-bottom:12px; color:#F8FAFC;}
+        .ai-box {background-color:#1E293B; padding:18px; border-radius:10px; border:1px solid #334155; margin-top:10px; line-height:1.6; color:#F8FAFC;}
+        </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+        <style>
+        .main-title {font-size:26px; font-weight:bold; color:#0F172A; margin-bottom:0px;}
+        .sub-title {font-size:14px; color:#475569; margin-bottom:15px;}
+        .role-badge {background-color:#E0E7FF; color:#3730A3; padding:5px 12px; border-radius:15px; font-weight:bold;}
+        
+        .status-online {background-color:#DCFCE7; color:#15803D; border:1px solid #86EFAC; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
+        .status-offline {background-color:#FEE2E2; color:#B91C1C; border:1px solid #FCA5A5; padding:6px 14px; border-radius:20px; font-weight:bold; display:inline-block; text-align:center;}
+        
+        .report-card-admin {background-color:#F8FAFC; padding:16px; border-radius:10px; border-left:5px solid #0284C7; margin-bottom:12px;}
+        .report-card-user {background-color:#F0FDF4; padding:16px; border-radius:10px; border-left:5px solid #16A34A; margin-bottom:12px;}
+        .ai-box {background-color:#F8FAFC; padding:18px; border-radius:10px; border:1px solid #CBD5E1; margin-top:10px; line-height:1.6;}
+        </style>
+    """, unsafe_allow_html=True)
 
 # ========================================================
 # ENCABEZADO CON LOGOS EN LAS ESQUINAS
@@ -120,13 +154,11 @@ with col_status:
 
 st.write("---")
 
-# ========================================================
-# MENÚ LATERAL CON LOGOS MÁS PEQUEÑOS Y CONTROL DE ACCESO
-# ========================================================
+# Logo institucional en barra lateral
 if os.path.exists("logo_cun.png"):
     st.sidebar.image("logo_cun.png", use_container_width=True)
 
-st.sidebar.title("🔐 Autenticación & Estado")
+st.sidebar.title("🔐 Control de Acceso")
 
 rol_seleccionado = st.sidebar.selectbox(
     "Selecciona tu perfil/rol:",
@@ -209,7 +241,7 @@ def generar_analisis_avanzado_sst(rep):
 
     return f"""
     <div class="ai-box">
-    <h4 style="color:#0F172A; margin-top:0px;">🔬 Dictamen Técnico de Inspección Automática (SST 5.0)</h4>
+    <h4 style="margin-top:0px;">🔬 Dictamen Técnico de Inspección Automática (SST 5.0)</h4>
     <p><b>🆔 Reporte Evaluado:</b> <code>{rep['ID']}</code> | <b>Severidad:</b> <span style="color:#B91C1C; font-weight:bold;">{sev}</span></p>
     <hr style="border:0.5px solid #E2E8F0;">
     <p>🧠 <b>Causa Raíz Identificada:</b><br>{causa}</p>
@@ -411,79 +443,4 @@ else:
                 else:
                     st.info("💡 **Dictamen del Motor Heurístico de la Central (Matriz SST 5.0):**")
                     html_diagnostico = generar_analisis_avanzado_sst(rep_ia)
-                    st.markdown(html_diagnostico, unsafe_allow_html=True)
-
-        with tab_management:
-            st.subheader("✍️ Centro de Validación, Asignación y Respuesta Oficial")
-            col_sel, col_del = st.columns([3, 1])
-            with col_sel:
-                id_gestion = st.selectbox("Seleccionar Reporte Único a Responder/Editar:", ids_disponibles, key="select_gestion")
-            
-            idx_gestion = next(i for i, r in enumerate(st.session_state["reportes"]) if r["ID"] == id_gestion)
-            r_edit = st.session_state["reportes"][idx_gestion]
-
-            with col_del:
-                st.write("")
-                st.write("")
-                if st.button("🗑️ Eliminar Reporte", type="primary"):
-                    st.session_state["reportes"].pop(idx_gestion)
-                    st.success(f"Reporte {id_gestion} eliminado de la Central.")
-                    st.rerun()
-
-            with st.form("form_edit_admin"):
-                c_a, c_b = st.columns(2)
-                with c_a:
-                    nuevo_estado = st.selectbox(
-                        "Estado de la Solicitud:",
-                        ["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"],
-                        index=["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"].index(r_edit["Estado"]) if r_edit["Estado"] in ["Pendiente (Nuevo)", "En Revisión", "Validado / En Gestión", "Atendido / Cerrado", "Rechazado"] else 0
-                    )
-                    responsable = st.text_input("Asignar Área/Responsable de Caso:", value=r_edit.get("Responsable", "Comité SST"))
-
-                with c_b:
-                    respuesta_admin = st.text_area("Respuesta Oficial / Plan de Intervención:", value=r_edit.get("Respuesta_Admin", ""))
-
-                btn_guardar_cambios = st.form_submit_button("💾 Guardar Cambios en BBDD")
-
-                if btn_guardar_cambios:
-                    st.session_state["reportes"][idx_gestion]["Estado"] = nuevo_estado
-                    st.session_state["reportes"][idx_gestion]["Responsable"] = responsable
-                    st.session_state["reportes"][idx_gestion]["Respuesta_Admin"] = respuesta_admin
-                    st.success(f"✅ Registro **{id_gestion}** actualizado correctamente.")
-                    st.rerun()
-
-        with tab_map:
-            st.subheader("🗺️ Sala de Crisis & Mapa de Calor Georreferenciado")
-            df_mapa = df_rep.rename(columns={"Latitud": "lat", "Longitud": "lon"})
-            st.map(df_mapa[["lat", "lon"]], zoom=13)
-
-        with tab_controls:
-            st.subheader("🎛️ Centro de Mando Master & Disponibilidad del Servicio")
-            st.write("Controla la disponibilidad pública para la recepción de reportes desde cualquier dispositivo:")
-            
-            col_c1, col_c2 = st.columns(2)
-            with col_c1:
-                nuevo_estado_switch = st.toggle("🟢 Prender (EN LÍNEA) / 🔴 Apagar (FUERA DE LÍNEA)", value=st.session_state["recepcion_activa"])
-                if nuevo_estado_switch != st.session_state["recepcion_activa"]:
-                    st.session_state["recepcion_activa"] = nuevo_estado_switch
-                    st.rerun()
-
-            with col_c2:
-                if st.session_state["recepcion_activa"]:
-                    st.success("✅ **Estado Global:** EN LÍNEA (Recepción de reportes habilitada)")
-                else:
-                    st.error("🚨 **Estado Global:** FUERA DE LÍNEA (Formulario bloqueado en modo mantenimiento)")
-
-        with tab_database:
-            st.subheader("💾 Consolidado General Registrado por Usuario")
-            user_filter = st.selectbox("Filtrar BBDD por Usuario:", ["Todos los Usuarios"] + list(df_rep["Usuario"].unique()))
-            df_export = df_rep[df_rep["Usuario"] == user_filter] if user_filter != "Todos los Usuarios" else df_rep
-            st.dataframe(df_export, use_container_width=True)
-
-            csv_export = df_export.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Descargar Base de Datos Consolidada (CSV / Excel)",
-                data=csv_export,
-                file_name="Base_Datos_SST_Central_CUN.csv",
-                mime="text/csv"
-            )
+                    st.markdown(html_diagnostico, unsafe_allow_html
